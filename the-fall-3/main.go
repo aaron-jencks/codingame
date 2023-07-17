@@ -36,6 +36,7 @@ const (
 	INDY_TOP = iota
 	INDY_LEFT
 	INDY_RIGHT
+	INDY_INVALID
 )
 
 const (
@@ -59,7 +60,7 @@ func FindEntranceFromExit(exit int) int {
 	case EXIT_RIGHT:
 		return INDY_LEFT
 	}
-	return INDY_TOP
+	return INDY_INVALID
 }
 
 type Room struct {
@@ -732,7 +733,7 @@ func (r Room) Exit(in int) int {
 		}
 	case ROOM_RB:
 		switch r.Rotation {
-		case ROTATION_270:
+		case ROTATION_180:
 			switch in {
 			case INDY_TOP:
 				return EXIT_LEFT
@@ -741,25 +742,25 @@ func (r Room) Exit(in int) int {
 			case INDY_RIGHT:
 				return EXIT_INVALID
 			}
+		case ROTATION_270:
+			switch in {
+			case INDY_TOP:
+				return EXIT_INVALID
+			case INDY_LEFT:
+				return EXIT_BOTTOM
+			case INDY_RIGHT:
+				return EXIT_INVALID
+			}
 		case ROTATION_0:
 			switch in {
 			case INDY_TOP:
 				return EXIT_INVALID
 			case INDY_LEFT:
-				return EXIT_BOTTOM
-			case INDY_RIGHT:
 				return EXIT_INVALID
+			case INDY_RIGHT:
+				return EXIT_BOTTOM
 			}
 		case ROTATION_90:
-			switch in {
-			case INDY_TOP:
-				return EXIT_INVALID
-			case INDY_LEFT:
-				return EXIT_INVALID
-			case INDY_RIGHT:
-				return EXIT_BOTTOM
-			}
-		case ROTATION_180:
 			switch in {
 			case INDY_TOP:
 				return EXIT_RIGHT
@@ -771,7 +772,7 @@ func (r Room) Exit(in int) int {
 		}
 	case ROOM_LB:
 		switch r.Rotation {
-		case ROTATION_180:
+		case ROTATION_270:
 			switch in {
 			case INDY_TOP:
 				return EXIT_LEFT
@@ -780,25 +781,25 @@ func (r Room) Exit(in int) int {
 			case INDY_RIGHT:
 				return EXIT_INVALID
 			}
-		case ROTATION_270:
-			switch in {
-			case INDY_TOP:
-				return EXIT_INVALID
-			case INDY_LEFT:
-				return EXIT_BOTTOM
-			case INDY_RIGHT:
-				return EXIT_INVALID
-			}
 		case ROTATION_0:
 			switch in {
 			case INDY_TOP:
 				return EXIT_INVALID
 			case INDY_LEFT:
+				return EXIT_BOTTOM
+			case INDY_RIGHT:
+				return EXIT_INVALID
+			}
+		case ROTATION_90:
+			switch in {
+			case INDY_TOP:
+				return EXIT_INVALID
+			case INDY_LEFT:
 				return EXIT_INVALID
 			case INDY_RIGHT:
 				return EXIT_BOTTOM
 			}
-		case ROTATION_90:
+		case ROTATION_180:
 			switch in {
 			case INDY_TOP:
 				return EXIT_RIGHT
@@ -995,7 +996,7 @@ func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 		for pindex := 0; pindex < len(path); pindex++ {
 			current := path[pindex]
 
-			next := EXIT_BOTTOM
+			next := INDY_TOP
 			if pindex < len(path)-1 {
 				next = path[pindex+1].Entrance
 			}
@@ -1004,17 +1005,25 @@ func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 
 			// we already know that this path works,
 			// so one of these rotations is going to work
-			rexit := pr.Exit(current.Entrance)
+			rexit := FindEntranceFromExit(pr.Exit(current.Entrance))
 			if rexit != next {
+				// we need to rotate
+
+				// if we can't rotate, then this path is invalid
+				if !pr.Rotatable {
+					valid = false
+					break
+				}
+
 				// cost 1
 				pr.Right()
-				rexit = pr.Exit(current.Entrance)
-				budget--
+				rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
+				// budget--
 				if rexit != next {
 					// cost 1
 					pr.Left()
 					pr.Left()
-					rexit = pr.Exit(current.Entrance)
+					rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
 					if rexit != next {
 						// cost 2
 						budget--
@@ -1039,6 +1048,48 @@ func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 	return result
 }
 
+func FindNextMove(m Map, start ObjectCoord) string {
+	paths := FindValidMapPath(m, start)
+	if len(paths) > 0 {
+		path := paths[0]
+		for pindex := 0; pindex < len(path); pindex++ {
+			current := path[pindex]
+
+			next := INDY_TOP
+			if pindex < len(path)-1 {
+				next = path[pindex+1].Entrance
+			}
+
+			pr := m.Rooms[current.Y][current.X].Clone()
+
+			// we already know that this path works,
+			// so one of these rotations is going to work
+			rexit := FindEntranceFromExit(pr.Exit(current.Entrance))
+			if rexit != next {
+				// we need to rotate
+
+				// cost 1
+				pr.Right()
+				rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
+				if rexit != next {
+					// cost 1
+					pr.Left()
+					pr.Left()
+					rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
+					if rexit == next {
+						m.Rooms[current.Y][current.X].Left()
+						return fmt.Sprintf("%d %d LEFT", current.X, current.Y)
+					}
+					// otherwise we turn right regardless
+				}
+				m.Rooms[current.Y][current.X].Right()
+				return fmt.Sprintf("%d %d RIGHT", current.X, current.Y)
+			}
+		}
+	}
+	return "WAIT"
+}
+
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Buffer(make([]byte, 1000000), 1000000)
@@ -1055,6 +1106,7 @@ func main() {
 	for i := 0; i < H+1; i++ {
 		scanner.Scan()
 		LINE := scanner.Text()
+		fmt.Fprintln(os.Stderr, LINE)
 		LINES = append(LINES, LINE)
 	}
 
@@ -1079,6 +1131,6 @@ func main() {
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
 
 		// One line containing on of three commands: 'X Y LEFT', 'X Y RIGHT' or 'WAIT'
-		fmt.Println("WAIT")
+		fmt.Println(FindNextMove(initial_map, initial_map.IndyPosition))
 	}
 }

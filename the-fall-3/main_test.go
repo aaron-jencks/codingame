@@ -504,6 +504,38 @@ func TestPathFinding(t *testing.T) {
 				},
 			},
 		},
+		{
+			m: ParseMap(4, 8, []string{
+				"0 -3 0 0 0 0 0 0",
+				"0 12 3 3 2 3 12 0",
+				"0 0 0 0 0 0 2 0",
+				"0 -12 3 2 2 3 13 0",
+				"1",
+			}),
+			start: ObjectCoord{
+				X:        1,
+				Y:        0,
+				Entrance: INDY_TOP,
+			},
+			out: [][]ObjectCoord{
+				{
+					ParseObjectCoord("1 0 TOP"),
+					ParseObjectCoord("1 1 TOP"),
+					ParseObjectCoord("2 1 LEFT"),
+					ParseObjectCoord("3 1 LEFT"),
+					ParseObjectCoord("4 1 LEFT"),
+					ParseObjectCoord("5 1 LEFT"),
+					ParseObjectCoord("6 1 LEFT"),
+					ParseObjectCoord("6 2 TOP"),
+					ParseObjectCoord("6 3 TOP"),
+					ParseObjectCoord("5 3 RIGHT"),
+					ParseObjectCoord("4 3 RIGHT"),
+					ParseObjectCoord("3 3 RIGHT"),
+					ParseObjectCoord("2 3 RIGHT"),
+					ParseObjectCoord("1 3 RIGHT"),
+				},
+			},
+		},
 	}
 
 	for ti, tc := range tcs {
@@ -597,6 +629,38 @@ func TestPathValidating(t *testing.T) {
 				},
 			},
 		},
+		{
+			m: ParseMap(4, 8, []string{
+				"0 -3 0 0 0 0 0 0",
+				"0 12 3 3 2 3 12 0",
+				"0 0 0 0 0 0 2 0",
+				"0 -12 3 2 2 3 13 0",
+				"1",
+			}),
+			start: ObjectCoord{
+				X:        1,
+				Y:        0,
+				Entrance: INDY_TOP,
+			},
+			out: [][]ObjectCoord{
+				{
+					ParseObjectCoord("1 0 TOP"),
+					ParseObjectCoord("1 1 TOP"),
+					ParseObjectCoord("2 1 LEFT"),
+					ParseObjectCoord("3 1 LEFT"),
+					ParseObjectCoord("4 1 LEFT"),
+					ParseObjectCoord("5 1 LEFT"),
+					ParseObjectCoord("6 1 LEFT"),
+					ParseObjectCoord("6 2 TOP"),
+					ParseObjectCoord("6 3 TOP"),
+					ParseObjectCoord("5 3 RIGHT"),
+					ParseObjectCoord("4 3 RIGHT"),
+					ParseObjectCoord("3 3 RIGHT"),
+					ParseObjectCoord("2 3 RIGHT"),
+					ParseObjectCoord("1 3 RIGHT"),
+				},
+			},
+		},
 	}
 
 	for ti, tc := range tcs {
@@ -614,6 +678,54 @@ func TestPathValidating(t *testing.T) {
 				if !found {
 					assert.True(tt, false, "all known paths should be found in the result, path %d was not found", pi)
 				}
+			}
+		})
+	}
+}
+
+func TestNextMove(t *testing.T) {
+	tcs := []struct {
+		m     Map
+		start ObjectCoord
+		out   []string
+	}{
+		{
+			m: ParseMap(9, 6, []string{
+				"0 0 0 0 0 -3",
+				"8 3 3 2 2 10",
+				"2 0 0 0 10 13",
+				"11 3 -2 3 1 13",
+				"-3 10 0 0 2 0",
+				"0 6 3 3 4 13",
+				"0 3 0 13 -4 10",
+				"0 13 2 4 10 0",
+				"0 0 0 -3 0 0",
+				"3",
+			}),
+			start: ParseObjectCoord("5 0 TOP"),
+			out: []string{
+				"2 1 RIGHT",
+				"1 1 RIGHT",
+				"0 2 RIGHT",
+				"1 3 RIGHT",
+				"3 3 RIGHT",
+				"4 4 RIGHT",
+				"3 5 RIGHT",
+				"2 5 RIGHT",
+				"1 5 RIGHT",
+				"1 7 RIGHT",
+				"1 7 RIGHT",
+				"3 7 RIGHT",
+				"WAIT",
+			},
+		},
+	}
+
+	for ti, tc := range tcs {
+		t.Run(fmt.Sprintf("TestNextMove(%d)", ti), func(tt *testing.T) {
+			for mi, mv := range tc.out {
+				result := FindNextMove(tc.m, tc.start)
+				assert.Equal(t, mv, result, "Function should generate a valid rotated path, failed at move %d", mi)
 			}
 		})
 	}
