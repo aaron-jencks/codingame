@@ -927,13 +927,13 @@ type PathNeighbor struct {
 	Rocks        []ObjectCoord
 }
 
-func FindRockPermutations(m Map, st PathState) [][]ObjectCoord {
-	var currentPerms [][]ObjectCoord
+func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
+	var currentPerms []map[int]ObjectCoord
 
-	for _, rock := range st.Rocks {
+	for ri, rock := range st.Rocks {
 		exits := m.Rooms[rock.Y][rock.X].TheoreticalExits(rock.Entrance)
 
-		prevPerms := make([][]ObjectCoord, len(currentPerms))
+		prevPerms := make([]map[int]ObjectCoord, len(currentPerms))
 		copy(prevPerms, currentPerms)
 		currentPerms = nil
 
@@ -946,15 +946,33 @@ func FindRockPermutations(m Map, st PathState) [][]ObjectCoord {
 
 			switch exit {
 			case EXIT_BOTTOM:
-				nm.Y = rock.Y + 1
+				if rock.Y+1 < m.Height {
+					nm.Y = rock.Y + 1
+				} else {
+					continue
+				}
 			case EXIT_LEFT:
-				nm.X = rock.X - 1
+				if rock.X-1 >= 0 {
+					nm.X = rock.X - 1
+				} else {
+					continue
+				}
 			case EXIT_RIGHT:
-				nm.X = rock.X + 1
+				if rock.X+1 < m.Width {
+					nm.X = rock.X + 1
+				} else {
+					continue
+				}
 			}
 
 			for _, perm := range prevPerms {
-				currentPerms = append(currentPerms, append(perm, nm))
+				nperm := map[int]ObjectCoord{}
+				for k, v := range perm {
+					nperm[k] = v
+				}
+				nperm[ri] = nm
+
+				currentPerms = append(currentPerms, nperm)
 			}
 		}
 	}
@@ -1034,6 +1052,7 @@ func FindMapPath(m Map) []MapPath {
 	stack := []PathState{
 		{
 			IndyPosition: m.IndyPosition,
+			Rocks:        m.Rocks,
 		},
 	}
 
