@@ -917,11 +917,53 @@ type SolutionMove struct {
 
 type PathState struct {
 	IndyPosition ObjectCoord
-	Solution     []ObjectCoord
+	Rocks        []ObjectCoord
+	IndySolution []ObjectCoord
+	RockSolution [][]ObjectCoord
 }
 
-func FindPathNeighbors(m Map, st PathState) []ObjectCoord {
-	var result []ObjectCoord
+type PathNeighbor struct {
+	IndyPosition ObjectCoord
+	Rocks        []ObjectCoord
+}
+
+func FindRockPermutations(m Map, st PathState) [][]ObjectCoord {
+	var currentPerms [][]ObjectCoord
+
+	for _, rock := range st.Rocks {
+		exits := m.Rooms[rock.Y][rock.X].TheoreticalExits(rock.Entrance)
+
+		prevPerms := make([][]ObjectCoord, len(currentPerms))
+		copy(prevPerms, currentPerms)
+		currentPerms = nil
+
+		for _, exit := range exits {
+			nm := ObjectCoord{
+				X:        rock.X,
+				Y:        rock.Y,
+				Entrance: FindEntranceFromExit(exit),
+			}
+
+			switch exit {
+			case EXIT_BOTTOM:
+				nm.Y = rock.Y + 1
+			case EXIT_LEFT:
+				nm.X = rock.X - 1
+			case EXIT_RIGHT:
+				nm.X = rock.X + 1
+			}
+
+			for _, perm := range prevPerms {
+				currentPerms = append(currentPerms, append(perm, nm))
+			}
+		}
+	}
+
+	return currentPerms
+}
+
+func FindIndyExits(m Map, st PathState) []ObjectCoord {
+	var indyExits []ObjectCoord
 
 	for _, exit := range m.Rooms[st.IndyPosition.Y][st.IndyPosition.X].TheoreticalExits(st.IndyPosition.Entrance) {
 		nm := ObjectCoord{
@@ -949,18 +991,49 @@ func FindPathNeighbors(m Map, st PathState) []ObjectCoord {
 				continue
 			}
 		}
-		result = append(result, nm)
+		indyExits = append(indyExits, nm)
+	}
+
+	return indyExits
+}
+
+func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
+	var result []PathNeighbor
+
+	rockPermutations := FindRockPermutations(m, st)
+	indyExits := FindIndyExits(m, st)
+
+	if len(rockPermutations) > 0 {
+		for _, perm := range rockPermutations {
+			for _, exit := range indyExits {
+				result = append(result, PathNeighbor{
+					IndyPosition: exit,
+					Rocks:        perm,
+				})
+			}
+		}
+	} else {
+		for _, exit := range indyExits {
+			result = append(result, PathNeighbor{
+				IndyPosition: exit,
+			})
+		}
 	}
 
 	return result
 }
 
-func FindMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
-	var result [][]ObjectCoord
+type MapPath struct {
+	Indy  []ObjectCoord
+	Rocks [][]ObjectCoord
+}
+
+func FindMapPath(m Map) []MapPath {
+	var result []MapPath
 
 	stack := []PathState{
 		{
-			IndyPosition: start,
+			IndyPosition: m.IndyPosition,
 		},
 	}
 
@@ -970,13 +1043,18 @@ func FindMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 
 		for _, mv := range FindPathNeighbors(m, st) {
 			ns := PathState{
-				IndyPosition: mv,
-				Solution:     append(st.Solution, st.IndyPosition),
+				IndyPosition: mv.IndyPosition,
+				Rocks:        mv.Rocks,
+				IndySolution: append(st.IndySolution, st.IndyPosition),
+				RockSolution: append(st.RockSolution, st.Rocks),
 			}
 
-			if mv.Y == m.Height-1 && mv.X == m.Exit {
+			if mv.IndyPosition.Y == m.Height-1 && mv.IndyPosition.X == m.Exit {
 				// found a solution
-				result = append(result, append(ns.Solution, mv))
+				result = append(result, MapPath{
+					Indy:  append(ns.IndySolution, mv.IndyPosition),
+					Rocks: append(ns.RockSolution, mv.Rocks),
+				})
 			} else {
 				stack = append(stack, ns)
 			}
@@ -986,19 +1064,19 @@ func FindMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 	return result
 }
 
-func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
-	var result [][]ObjectCoord
+func FindValidMapPath(m Map) []MapPath {
+	var result []MapPath
 
-	for _, path := range FindMapPath(m, start) {
+	for _, path := range FindMapPath(m) {
 		budget := 1
 		valid := true
 
-		for pindex := 0; pindex < len(path); pindex++ {
-			current := path[pindex]
+		for pindex := 0; pindex < len(path.Indy); pindex++ {
+			current := path.Indy[pindex]
 
 			next := INDY_TOP
-			if pindex < len(path)-1 {
-				next = path[pindex+1].Entrance
+			if pindex < len(path.Indy)-1 {
+				next = path.Indy[pindex+1].Entrance
 			}
 
 			pr := m.Rooms[current.Y][current.X].Clone()
@@ -1048,16 +1126,16 @@ func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
 	return result
 }
 
-func FindNextMove(m Map, start ObjectCoord) string {
-	paths := FindValidMapPath(m, start)
+func FindNextMove(m Map) string {
+	paths := FindValidMapPath(m)
 	if len(paths) > 0 {
 		path := paths[0]
-		for pindex := 0; pindex < len(path); pindex++ {
-			current := path[pindex]
+		for pindex := 0; pindex < len(path.Indy); pindex++ {
+			current := path.Indy[pindex]
 
 			next := INDY_TOP
-			if pindex < len(path)-1 {
-				next = path[pindex+1].Entrance
+			if pindex < len(path.Indy)-1 {
+				next = path.Indy[pindex+1].Entrance
 			}
 
 			pr := m.Rooms[current.Y][current.X].Clone()
@@ -1131,6 +1209,6 @@ func main() {
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
 
 		// One line containing on of three commands: 'X Y LEFT', 'X Y RIGHT' or 'WAIT'
-		fmt.Println(FindNextMove(initial_map, initial_map.IndyPosition))
+		fmt.Println(FindNextMove(initial_map))
 	}
 }

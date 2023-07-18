@@ -540,13 +540,14 @@ func TestPathFinding(t *testing.T) {
 
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestPathfinding(%d)", ti), func(tt *testing.T) {
-			result := FindMapPath(tc.m, tc.start)
+			tc.m.IndyPosition = tc.start
+			result := FindMapPath(tc.m)
 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
 
 			for pi, path := range tc.out {
 				found := false
 				for _, tpath := range result {
-					if reflect.DeepEqual(path, tpath) {
+					if reflect.DeepEqual(path, tpath.Indy) {
 						found = true
 					}
 				}
@@ -665,13 +666,14 @@ func TestPathValidating(t *testing.T) {
 
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestPathfinding(%d)", ti), func(tt *testing.T) {
-			result := FindValidMapPath(tc.m, tc.start)
+			tc.m.IndyPosition = tc.start
+			result := FindValidMapPath(tc.m)
 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
 
 			for pi, path := range tc.out {
 				found := false
 				for _, tpath := range result {
-					if reflect.DeepEqual(path, tpath) {
+					if reflect.DeepEqual(path, tpath.Indy) {
 						found = true
 					}
 				}
@@ -724,7 +726,8 @@ func TestNextMove(t *testing.T) {
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestNextMove(%d)", ti), func(tt *testing.T) {
 			for mi, mv := range tc.out {
-				result := FindNextMove(tc.m, tc.start)
+				tc.m.IndyPosition = tc.start
+				result := FindNextMove(tc.m)
 				assert.Equal(t, mv, result, "Function should generate a valid rotated path, failed at move %d", mi)
 			}
 		})
