@@ -851,7 +851,7 @@ type Map struct {
 	Rooms        [][]Room
 	Exit         int
 	IndyPosition ObjectCoord
-	Rocks        []ObjectCoord
+	Rocks        map[int]ObjectCoord
 }
 
 func (m Map) Clone() Map {
@@ -861,7 +861,7 @@ func (m Map) Clone() Map {
 		Exit:         m.Exit,
 		IndyPosition: m.IndyPosition,
 		Rooms:        make([][]Room, m.Height),
-		Rocks:        make([]ObjectCoord, len(m.Rocks)),
+		Rocks:        make(map[int]ObjectCoord),
 	}
 
 	for ri := range m.Rooms {
@@ -869,7 +869,9 @@ func (m Map) Clone() Map {
 		copy(result.Rooms[ri], m.Rooms[ri])
 	}
 
-	copy(result.Rocks, m.Rocks)
+	for k, v := range m.Rocks {
+		result.Rocks[k] = v
+	}
 
 	return result
 }
@@ -917,14 +919,14 @@ type SolutionMove struct {
 
 type PathState struct {
 	IndyPosition ObjectCoord
-	Rocks        []ObjectCoord
+	Rocks        map[int]ObjectCoord
 	IndySolution []ObjectCoord
-	RockSolution [][]ObjectCoord
+	RockSolution []map[int]ObjectCoord
 }
 
 type PathNeighbor struct {
 	IndyPosition ObjectCoord
-	Rocks        []ObjectCoord
+	Rocks        map[int]ObjectCoord
 }
 
 func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
@@ -1043,7 +1045,7 @@ func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
 
 type MapPath struct {
 	Indy  []ObjectCoord
-	Rocks [][]ObjectCoord
+	Rocks []map[int]ObjectCoord
 }
 
 func FindMapPath(m Map) []MapPath {
@@ -1218,7 +1220,7 @@ func main() {
 		scanner.Scan()
 		fmt.Sscan(scanner.Text(), &R)
 
-		initial_map.Rocks = make([]ObjectCoord, R)
+		initial_map.Rocks = make(map[int]ObjectCoord)
 
 		for i := 0; i < R; i++ {
 			scanner.Scan()
