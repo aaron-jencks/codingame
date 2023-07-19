@@ -285,16 +285,16 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "horizontal/vertical",
 			r:    ParseRoom("2"),
 			out: [][]int{
-				{EXIT_BOTTOM},
-				{EXIT_RIGHT},
-				{EXIT_LEFT},
+				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_RIGHT},
+				{EXIT_INVALID, EXIT_LEFT},
 			},
 		},
 		{
 			name: "horizontal locked",
 			r:    ParseRoom("-2"),
 			out: [][]int{
-				nil,
+				{EXIT_INVALID},
 				{EXIT_RIGHT},
 				{EXIT_LEFT},
 			},
@@ -304,7 +304,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-3"),
 			out: [][]int{
 				{EXIT_BOTTOM},
-				nil, nil,
+				{EXIT_INVALID}, {EXIT_INVALID},
 			},
 		},
 		{
@@ -312,8 +312,8 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("4"),
 			out: [][]int{
 				{EXIT_RIGHT, EXIT_LEFT},
-				{EXIT_BOTTOM},
-				{EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_BOTTOM},
 			},
 		},
 		{
@@ -321,7 +321,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-4"),
 			out: [][]int{
 				{EXIT_LEFT},
-				nil,
+				{EXIT_INVALID},
 				{EXIT_BOTTOM},
 			},
 		},
@@ -331,23 +331,23 @@ func TestTheoreticalExits(t *testing.T) {
 			out: [][]int{
 				{EXIT_RIGHT},
 				{EXIT_BOTTOM},
-				nil,
+				{EXIT_INVALID},
 			},
 		},
 		{
 			name: "T",
 			r:    ParseRoom("6"),
 			out: [][]int{
-				{EXIT_BOTTOM},
-				{EXIT_RIGHT, EXIT_BOTTOM},
-				{EXIT_LEFT, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_RIGHT, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_LEFT, EXIT_BOTTOM},
 			},
 		},
 		{
 			name: "top T locked",
 			r:    ParseRoom("-6"),
 			out: [][]int{
-				nil,
+				{EXIT_INVALID},
 				{EXIT_RIGHT},
 				{EXIT_LEFT},
 			},
@@ -357,7 +357,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-7"),
 			out: [][]int{
 				{EXIT_BOTTOM},
-				nil,
+				{EXIT_INVALID},
 				{EXIT_BOTTOM},
 			},
 		},
@@ -365,7 +365,7 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "bottom T locked",
 			r:    ParseRoom("-8"),
 			out: [][]int{
-				nil,
+				{EXIT_INVALID},
 				{EXIT_BOTTOM},
 				{EXIT_BOTTOM},
 			},
@@ -376,16 +376,16 @@ func TestTheoreticalExits(t *testing.T) {
 			out: [][]int{
 				{EXIT_BOTTOM},
 				{EXIT_BOTTOM},
-				nil,
+				{EXIT_INVALID},
 			},
 		},
 		{
 			name: "tl/tr/rb/lb",
 			r:    ParseRoom("10"),
 			out: [][]int{
-				{EXIT_LEFT, EXIT_RIGHT},
-				{EXIT_BOTTOM},
-				{EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_LEFT, EXIT_RIGHT},
+				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_INVALID, EXIT_BOTTOM},
 			},
 		},
 		{
@@ -393,7 +393,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-10"),
 			out: [][]int{
 				{EXIT_LEFT},
-				nil, nil,
+				{EXIT_INVALID}, {EXIT_INVALID},
 			},
 		},
 		{
@@ -401,14 +401,14 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-11"),
 			out: [][]int{
 				{EXIT_RIGHT},
-				nil, nil,
+				{EXIT_INVALID}, {EXIT_INVALID},
 			},
 		},
 		{
 			name: "rb locked",
 			r:    ParseRoom("-12"),
 			out: [][]int{
-				nil, nil,
+				{EXIT_INVALID}, {EXIT_INVALID},
 				{EXIT_BOTTOM},
 			},
 		},
@@ -416,9 +416,9 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "lb locked",
 			r:    ParseRoom("-13"),
 			out: [][]int{
-				nil,
+				{EXIT_INVALID},
 				{EXIT_BOTTOM},
-				nil,
+				{EXIT_INVALID},
 			},
 		},
 	}
@@ -804,12 +804,54 @@ func TestRockPermutations(t *testing.T) {
 	}
 }
 
+// func TestPathNeighborsWRocks(t *testing.T) {
+// 	tcs := []struct {
+// 		m     Map
+// 		start ObjectCoord
+// 		rocks map[int]ObjectCoord
+// 		out   []PathNeighbor
+// 	}{
+// 		{
+// 			m: ParseMap(8, 10, []string{
+// 				"0 0 0 0 0 0 0 0 -3 0",
+// 				"0 7 -2 3 -2 3 -2 3 11 0",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 6 -2 2 2 2 2 2 2 -2",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 8 -2 2 2 2 2 2 2 -2",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 -3 0 0 0 0 0 0 0 0",
+// 				"1",
+// 			}),
+// 			start: ParseObjectCoord("8 0 TOP"),
+// 			rocks: map[int]ObjectCoord{
+// 				0: ParseObjectCoord("9 2 RIGHT"),
+// 			},
+// 			out: []PathNeighbor{
+// 				{
+// 					IndyPosition: ParseObjectCoord("8 1 TOP"),
+// 					Rocks: map[int]ObjectCoord{
+// 						0: ParseObjectCoord("8 2 RIGHT"),
+// 					},
+// 				},
+// 				{
+// 					IndyPosition: ParseObjectCoord("8 1 TOP"),
+// 					Rocks: map[int]ObjectCoord{
+// 						0: ObjectCoord{},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+// }
+
 func TestPathFindingWRocks(t *testing.T) {
 	tcs := []struct {
-		m     Map
-		start ObjectCoord
-		rocks map[int]ObjectCoord
-		out   [][]ObjectCoord
+		m       Map
+		start   ObjectCoord
+		rocks   map[int]ObjectCoord
+		out     [][]ObjectCoord
+		rockOut []map[int][]ObjectCoord
 	}{
 		{
 			m: ParseMap(8, 10, []string{
@@ -846,6 +888,11 @@ func TestPathFindingWRocks(t *testing.T) {
 			rocks: map[int]ObjectCoord{
 				0: ParseObjectCoord("9 2 RIGHT"),
 			},
+			rockOut: []map[int][]ObjectCoord{
+				{
+					0: {},
+				},
+			},
 		},
 	}
 
@@ -858,10 +905,39 @@ func TestPathFindingWRocks(t *testing.T) {
 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
 
 			for pi, path := range tc.out {
+				rdict := tc.rockOut[pi] // for checking rocks
+
 				found := false
 				for _, tpath := range result {
 					if reflect.DeepEqual(path, tpath.Indy) {
 						found = true
+
+						// check the rocks
+						for k, v := range rdict {
+							var ri int
+							var rrdict map[int]ObjectCoord
+							for ri, rrdict = range tpath.Rocks {
+								if ri >= len(v) {
+									assert.True(tt, false, "too many rock entries for %d, expected at most %d, but got %d", k, len(v), ri+1)
+									found = false
+									break
+								}
+								if !reflect.DeepEqual(rrdict[k], v[ri]) {
+									found = false
+									break
+								}
+							}
+							if ri != len(v)-1 {
+								assert.True(tt, false, "not enough rock entries for %d, expected %d, but got %d", k, len(v), ri+1)
+							}
+							if !found {
+								break
+							}
+						}
+
+						if found {
+							break
+						}
 					}
 				}
 				if !found {
@@ -871,3 +947,71 @@ func TestPathFindingWRocks(t *testing.T) {
 		})
 	}
 }
+
+// func TestPathValidatingWRocks(t *testing.T) {
+// 	tcs := []struct {
+// 		m     Map
+// 		start ObjectCoord
+// 		rocks map[int]ObjectCoord
+// 		out   [][]ObjectCoord
+// 	}{
+// 		{
+// 			m: ParseMap(8, 10, []string{
+// 				"0 0 0 0 0 0 0 0 -3 0",
+// 				"0 7 -2 3 -2 3 -2 3 11 0",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 6 -2 2 2 2 2 2 2 -2",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 8 -2 2 2 2 2 2 2 -2",
+// 				"0 -7 -2 2 2 2 2 2 2 -2",
+// 				"0 -3 0 0 0 0 0 0 0 0",
+// 				"1",
+// 			}),
+// 			start: ParseObjectCoord("8 0 TOP"),
+// 			out: [][]ObjectCoord{
+// 				{
+// 					ParseObjectCoord("8 0 TOP"),
+// 					ParseObjectCoord("8 1 TOP"),
+// 					ParseObjectCoord("7 1 RIGHT"),
+// 					ParseObjectCoord("6 1 RIGHT"),
+// 					ParseObjectCoord("5 1 RIGHT"),
+// 					ParseObjectCoord("4 1 RIGHT"),
+// 					ParseObjectCoord("3 1 RIGHT"),
+// 					ParseObjectCoord("2 1 RIGHT"),
+// 					ParseObjectCoord("1 1 RIGHT"),
+// 					ParseObjectCoord("1 2 TOP"),
+// 					ParseObjectCoord("1 3 TOP"),
+// 					ParseObjectCoord("1 4 TOP"),
+// 					ParseObjectCoord("1 5 TOP"),
+// 					ParseObjectCoord("1 6 TOP"),
+// 					ParseObjectCoord("1 7 TOP"),
+// 				},
+// 			},
+// 			rocks: map[int]ObjectCoord{
+// 				0: ParseObjectCoord("9 2 RIGHT"),
+// 			},
+// 		},
+// 	}
+
+// 	for ti, tc := range tcs {
+// 		t.Run(fmt.Sprintf("TestPathfindingWRocks(%d)", ti), func(tt *testing.T) {
+// 			tc.m.IndyPosition = tc.start
+// 			tc.m.Rocks = tc.rocks
+
+// 			result := FindValidMapPath(tc.m)
+// 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
+
+// 			for pi, path := range tc.out {
+// 				found := false
+// 				for _, tpath := range result {
+// 					if reflect.DeepEqual(path, tpath.Indy) {
+// 						found = true
+// 					}
+// 				}
+// 				if !found {
+// 					assert.True(tt, false, "all known paths should be found in the result, path %d was not found", pi)
+// 				}
+// 			}
+// 		})
+// 	}
+// }

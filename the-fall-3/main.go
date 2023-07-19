@@ -156,10 +156,13 @@ func (r Room) TheoreticalExits(in int) []int {
 					EXIT_LEFT,
 				}
 			case INDY_TOP:
-				return []int{
-					EXIT_INVALID,
-					EXIT_BOTTOM,
+				if r.Rotatable {
+					return []int{
+						EXIT_INVALID,
+						EXIT_BOTTOM,
+					}
 				}
+				return []int{EXIT_BOTTOM}
 			}
 		}
 	case ROOM_TLRB:
@@ -412,8 +415,14 @@ func (r Room) TheoreticalExits(in int) []int {
 		} else {
 			switch in {
 			case INDY_LEFT:
-				fallthrough
+				return []int{
+					EXIT_INVALID,
+					EXIT_BOTTOM,
+				}
 			case INDY_RIGHT:
+				if !r.Rotatable {
+					return []int{EXIT_BOTTOM}
+				}
 				return []int{
 					EXIT_INVALID,
 					EXIT_BOTTOM,
@@ -432,6 +441,9 @@ func (r Room) TheoreticalExits(in int) []int {
 		} else {
 			switch in {
 			case INDY_LEFT:
+				if !r.Rotatable {
+					return []int{EXIT_BOTTOM}
+				}
 				fallthrough
 			case INDY_RIGHT:
 				return []int{
