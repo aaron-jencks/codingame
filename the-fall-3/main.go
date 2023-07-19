@@ -840,9 +840,10 @@ func ParseRoom(line string) Room {
 }
 
 type ObjectCoord struct {
-	X        int
-	Y        int
-	Entrance int
+	X         int
+	Y         int
+	Entrance  int
+	Temporary bool
 }
 
 type Map struct {
@@ -933,6 +934,12 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 	var currentPerms []map[int]ObjectCoord
 
 	for ri, rock := range st.Rocks {
+		if rock.Temporary {
+			// this was an echo of a collision,
+			// but Indy will still die if he goes here
+			continue
+		}
+
 		exits := m.Rooms[rock.Y][rock.X].TheoreticalExits(rock.Entrance)
 
 		prevPerms := make([]map[int]ObjectCoord, len(currentPerms))
@@ -969,9 +976,26 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 
 			for _, perm := range prevPerms {
 				nperm := map[int]ObjectCoord{}
+
+				found := false
 				for k, v := range perm {
+					if nm.X == v.X && nm.Y == v.Y {
+						// two rocks collided and destroyed each other
+						// skip copying this over,
+						// the rock was destroyed
+						found = true
+						continue
+					}
+
 					nperm[k] = v
 				}
+
+				if found {
+					// create a collision echo
+					// in case indy tries to go here
+					nm.Temporary = true
+				}
+
 				nperm[ri] = nm
 
 				currentPerms = append(currentPerms, nperm)
@@ -1017,6 +1041,15 @@ func FindIndyExits(m Map, st PathState) []ObjectCoord {
 	return indyExits
 }
 
+func HasIndyRockCollision(indyLoc ObjectCoord, rockLoc map[int]ObjectCoord) bool {
+	for _, rock := range rockLoc {
+		if indyLoc.X == rock.X && indyLoc.Y == rock.Y {
+			return true
+		}
+	}
+	return false
+}
+
 func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
 	var result []PathNeighbor
 
@@ -1026,10 +1059,12 @@ func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
 	if len(rockPermutations) > 0 {
 		for _, perm := range rockPermutations {
 			for _, exit := range indyExits {
-				result = append(result, PathNeighbor{
-					IndyPosition: exit,
-					Rocks:        perm,
-				})
+				if !HasIndyRockCollision(exit, perm) {
+					result = append(result, PathNeighbor{
+						IndyPosition: exit,
+						Rocks:        perm,
+					})
+				}
 			}
 		}
 	} else {
@@ -1070,6 +1105,11 @@ func FindMapPath(m Map) []MapPath {
 				RockSolution: append(st.RockSolution, st.Rocks),
 			}
 
+			if !HasIndyRockCollision(mv.IndyPosition, mv.Rocks) {
+				// Indy collided with a rock
+				continue
+			}
+
 			if mv.IndyPosition.Y == m.Height-1 && mv.IndyPosition.X == m.Exit {
 				// found a solution
 				result = append(result, MapPath{
@@ -1092,12 +1132,65 @@ func FindValidMapPath(m Map) []MapPath {
 		budget := 1
 		valid := true
 
-		for pindex := 0; pindex < len(path.Indy); pindex++ {
-			current := path.Indy[pindex]
+		// we can make at most len(path.Indy) rotations,
+		// so we only need to loop that many times
+		for tick := 0; tick < len(path.Indy); tick++ {
+			rocks := make([][]bool, m.Height)
+			for ri := range rocks {
+				rocks[ri] = make([]bool, m.Width)
+			}
+
+			// Move the rocks
+			if tick < len(path.Rocks) {
+				for ri, rock := range path.Rocks[tick] {
+					next := INDY_INVALID
+					if tick < len(path.Rocks)-1 {
+						if nrock, ok := path.Rocks[tick+1][ri]; ok {
+							next = nrock.Entrance
+						}
+					}
+
+					rr := m.Rooms[rock.Y][rock.X].Clone()
+
+					rexit := FindEntranceFromExit(rr.Exit(rock.Entrance))
+					if rexit != next {
+						// we need to rotate
+
+						// if we can't rotate, then this path is invalid
+						if !rr.Rotatable {
+							valid = false
+							break
+						}
+
+						// cost 1
+						rr.Right()
+						rexit = FindEntranceFromExit(rr.Exit(rock.Entrance))
+						budget--
+						if rexit != next {
+							// cost 1
+							rr.Left()
+							rr.Left()
+							rexit = FindEntranceFromExit(rr.Exit(rock.Entrance))
+							if rexit != next {
+								// cost 2
+								budget--
+							}
+						}
+					}
+
+					if budget < 0 {
+						valid = false
+						break
+					}
+				}
+			}
+
+			// Move Indy
+			current := path.Indy[tick]
 
 			next := INDY_TOP
-			if pindex < len(path.Indy)-1 {
-				next = path.Indy[pindex+1].Entrance
+			if tick < len(path.Indy)-1 {
+				next = path.Indy[tick+1].Entrance
 			}
 
 			pr := m.Rooms[current.Y][current.X].Clone()
@@ -1117,7 +1210,7 @@ func FindValidMapPath(m Map) []MapPath {
 				// cost 1
 				pr.Right()
 				rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
-				// budget--
+				budget--
 				if rexit != next {
 					// cost 1
 					pr.Left()
@@ -1128,8 +1221,6 @@ func FindValidMapPath(m Map) []MapPath {
 						budget--
 					}
 				}
-			} else {
-				budget++
 			}
 
 			// Indy would be here before we can rotate all of the way
@@ -1137,6 +1228,13 @@ func FindValidMapPath(m Map) []MapPath {
 				valid = false
 				break
 			}
+
+			if current.X == m.Exit && current.Y == m.Height-1 {
+				// we reached the end of Indy's path
+				break
+			}
+
+			budget++
 		}
 
 		if valid {
