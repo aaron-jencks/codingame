@@ -733,3 +733,73 @@ func TestNextMove(t *testing.T) {
 		})
 	}
 }
+
+func TestRockPermutations(t *testing.T) {
+	tcs := []struct {
+		m   Map
+		st  PathState
+		out []map[int]ObjectCoord
+	}{
+		{
+			m: ParseMap(6, 6, []string{
+				"0 -3 -3 -5 1 -1",
+				"-13 11 4 0 -3 1",
+				"11 6 1 0 10 1",
+				"0 0 10 3 3 1",
+				"0 0 0 0 0 3",
+				"0 0 0 0 0 -3",
+				"5",
+			}),
+			st: PathState{
+				IndyPosition: ParseObjectCoord("1 0 TOP"),
+				Rocks: map[int]ObjectCoord{
+					0: ParseObjectCoord("2 0 TOP"),
+					1: ParseObjectCoord("0 1 LEFT"),
+					2: ParseObjectCoord("4 2 TOP"),
+					3: ParseObjectCoord("5 1 TOP"),
+				},
+			},
+			out: []map[int]ObjectCoord{
+				{
+					0: ParseObjectCoord("2 1 TOP"),
+					1: ParseObjectCoord("0 2 TOP"),
+					2: ParseObjectCoord("3 2 RIGHT"),
+					3: ParseObjectCoord("5 2 TOP"),
+				},
+				{
+					// should eliminate the two collisions
+					// but leave an echo
+					0: ParseObjectCoord("2 1 TOP"),
+					1: ParseObjectCoord("0 2 TOP"),
+					3: ObjectCoord{
+						X:         5,
+						Y:         2,
+						Entrance:  INDY_TOP,
+						Temporary: true,
+					},
+				},
+			},
+		},
+	}
+
+	for ti, tc := range tcs {
+		t.Run(fmt.Sprintf("TestRockPermutations(%d)", ti), func(tt *testing.T) {
+			result := FindRockPermutations(tc.m, tc.st)
+
+			assert.Equal(tt, len(tc.out), len(result), "result and testcase should have same number of permutations")
+
+			for permi, perm := range tc.out {
+				found := false
+				for _, rperm := range result {
+					if reflect.DeepEqual(perm, rperm) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					assert.True(tt, false, "Function should all valid permutations, permutation %d not found", permi)
+				}
+			}
+		})
+	}
+}

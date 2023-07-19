@@ -974,31 +974,37 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 				}
 			}
 
-			for _, perm := range prevPerms {
-				nperm := map[int]ObjectCoord{}
+			if len(prevPerms) > 0 {
+				for _, perm := range prevPerms {
+					nperm := map[int]ObjectCoord{}
 
-				found := false
-				for k, v := range perm {
-					if nm.X == v.X && nm.Y == v.Y {
-						// two rocks collided and destroyed each other
-						// skip copying this over,
-						// the rock was destroyed
-						found = true
-						continue
+					found := false
+					for k, v := range perm {
+						if nm.X == v.X && nm.Y == v.Y {
+							// two rocks collided and destroyed each other
+							// skip copying this over,
+							// the rock was destroyed
+							found = true
+							continue
+						}
+
+						nperm[k] = v
 					}
 
-					nperm[k] = v
+					if found {
+						// create a collision echo
+						// in case indy tries to go here
+						nm.Temporary = true
+					}
+
+					nperm[ri] = nm
+
+					currentPerms = append(currentPerms, nperm)
 				}
-
-				if found {
-					// create a collision echo
-					// in case indy tries to go here
-					nm.Temporary = true
-				}
-
-				nperm[ri] = nm
-
-				currentPerms = append(currentPerms, nperm)
+			} else {
+				currentPerms = append(currentPerms, map[int]ObjectCoord{
+					ri: nm,
+				})
 			}
 		}
 	}
