@@ -1326,9 +1326,12 @@ func main() {
 
 		initial_map.Rocks = make(map[int]ObjectCoord)
 
+		fmt.Fprintln(os.Stderr, "Rocks:")
 		for i := 0; i < R; i++ {
 			scanner.Scan()
-			initial_map.Rocks[i] = ParseObjectCoord(scanner.Text())
+			rtext := scanner.Text()
+			fmt.Fprintln(os.Stderr, rtext)
+			initial_map.Rocks[i] = ParseObjectCoord(rtext)
 		}
 
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
