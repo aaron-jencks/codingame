@@ -1111,7 +1111,7 @@ func FindMapPath(m Map) []MapPath {
 				RockSolution: append(st.RockSolution, st.Rocks),
 			}
 
-			if !HasIndyRockCollision(mv.IndyPosition, mv.Rocks) {
+			if HasIndyRockCollision(mv.IndyPosition, mv.Rocks) {
 				// Indy collided with a rock
 				continue
 			}
