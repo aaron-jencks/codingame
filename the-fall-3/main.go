@@ -1088,6 +1088,10 @@ func FindIndyExits(m Map, st PathState) []ObjectCoord {
 	var indyExits []ObjectCoord
 
 	for _, exit := range m.Rooms[st.IndyPosition.Y][st.IndyPosition.X].TheoreticalExits(st.IndyPosition.Entrance) {
+		if exit == EXIT_INVALID {
+			continue
+		}
+
 		nm := ObjectCoord{
 			X:        st.IndyPosition.X,
 			Y:        st.IndyPosition.Y,
