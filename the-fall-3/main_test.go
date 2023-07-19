@@ -252,8 +252,8 @@ func TestMapCloning(t *testing.T) {
 				ParseRoom("3"),
 			},
 		},
-		Rocks: []ObjectCoord{
-			ParseObjectCoord("5 5 TOP"),
+		Rocks: map[int]ObjectCoord{
+			0: ParseObjectCoord("5 5 TOP"),
 		},
 	}
 
