@@ -85,7 +85,23 @@ func (n Neighbors) Swap(i, j int) {
 	n[j] = temp
 }
 
-func FindNeighbors(s State) []State {
+type FilteredNeighbors []State
+
+func (n FilteredNeighbors) Len() int {
+	return len(n)
+}
+
+func (n FilteredNeighbors) Less(i, j int) bool {
+	return len(FindNeighbors(n[i])) < len(FindNeighbors(n[j]))
+}
+
+func (n FilteredNeighbors) Swap(i, j int) {
+	temp := n[i]
+	n[i] = n[j]
+	n[j] = temp
+}
+
+func FindNeighbors(s State) FilteredNeighbors {
 	var ns Neighbors
 
 	for r := 0; r < 16; r++ {
@@ -116,42 +132,21 @@ func FindNeighbors(s State) []State {
 func FindSolution(initial State) State {
 	stack := []State{initial}
 	for len(stack) > 0 {
-		// // last := len(stack) - 1
-		// // element := stack[last]
-		// // stack = stack[:last]
-		// element := stack[0]
-		// stack = stack[1:]
+		last := len(stack) - 1
+		element := stack[last]
+		stack = stack[:last]
 
-		// if element.Done() {
-		// 	return element
-		// }
-
-		// neighbors := FindNeighbors(element)
-		// for _, n := range neighbors {
-		// 	if n.Done() {
-		// 		return n
-		// 	}
-		// 	stack = append(stack, n)
-		// }
-
-		var neighbors Neighbors
-		for si := range stack {
-			element := stack[si]
-			if element.Done() {
-				return element
-			}
-			eneighbors := FindNeighbors(element)
-			for _, n := range eneighbors {
-				if n.Done() {
-					return n
-				}
-			}
-			neighbors = append(neighbors, eneighbors)
+		if element.Done() {
+			return element
 		}
-		stack = nil
-		sort.Sort(neighbors)
-		for _, neigh := range neighbors {
-			stack = append(stack, neigh...)
+
+		neighbors := FindNeighbors(element)
+		// sort.Sort(neighbors)
+		for _, n := range neighbors {
+			if n.Done() {
+				return n
+			}
+			stack = append(stack, n)
 		}
 	}
 
