@@ -59,7 +59,15 @@ func (s State) ValidPlacement(r, c int, ch rune) bool {
 	cblock := c >> 2 << 2
 
 	for ri := rblock; ri < rblock+BLOCK_SIZE; ri++ {
+		if ri == r {
+			continue
+		}
+
 		for ci := cblock; ci < cblock+BLOCK_SIZE; ci++ {
+			if ci == c {
+				continue
+			}
+
 			if s.Solution[ri][ci] == ch {
 				return false
 			}
