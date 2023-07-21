@@ -1,0 +1,9 @@
+assign each cell a variable Xrc
+where r is the row
+and c is the column
+both of these are [1,16]
+
+Sum(X1[1,16]) <= 136
+Sum(X[1,16]1) <= 136
+Sum(Empty1[1,16]) <= 136 - Sum(Filled1[1,16])
+Sum(Empty[1,16]1) <= 136 - Sum(Filled[1,16]1)
