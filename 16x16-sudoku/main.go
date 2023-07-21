@@ -12,6 +12,38 @@ const VALID = "ABCDEFGHIJKLMNOP"
 const SIZE = 16
 const BLOCK_SIZE = SIZE >> 2
 
+type Coord struct {
+	Row int
+	Col int
+}
+
+type Openings struct {
+	Rows   []int
+	Cols   []int
+	Quad   [][]int
+	Coords []Coord
+}
+
+func (o Openings) GetCount(r, c int) int {
+	return o.Rows[r] + o.Cols[c] + o.Quad[r>>2][c>>2]
+}
+
+func (o Openings) Len() int {
+	return len(o.Coords)
+}
+
+func (o Openings) Less(i, j int) bool {
+	ic := o.Coords[i]
+	jc := o.Coords[j]
+	return o.GetCount(ic.Row, ic.Col) < o.GetCount(jc.Row, jc.Col)
+}
+
+func (n Openings) Swap(i, j int) {
+	temp := n.Coords[i]
+	n.Coords[i] = n.Coords[j]
+	n.Coords[j] = temp
+}
+
 type State struct {
 	Solution [][]rune
 }
@@ -77,6 +109,81 @@ func (s State) ValidPlacement(r, c int, ch rune) bool {
 	return true
 }
 
+func (s State) FindValidValues(r, c int) []rune {
+	isValid := map[rune]bool{}
+	for _, r := range VALID {
+		isValid[r] = true
+	}
+
+	if s.Solution[r][c] != EMPTY && isValid[s.Solution[r][c]] {
+		isValid[s.Solution[r][c]] = false
+	}
+
+	for i := 0; i < SIZE; i++ {
+		if i != c && s.Solution[r][i] != EMPTY && isValid[s.Solution[r][i]] {
+			isValid[s.Solution[r][i]] = false
+		}
+		if i != r && s.Solution[i][c] != EMPTY && isValid[s.Solution[i][c]] {
+			isValid[s.Solution[i][c]] = false
+		}
+	}
+
+	rblock := r >> 2 << 2
+	cblock := c >> 2 << 2
+
+	for ri := rblock; ri < rblock+BLOCK_SIZE; ri++ {
+		if ri == r {
+			continue
+		}
+
+		for ci := cblock; ci < cblock+BLOCK_SIZE; ci++ {
+			if ci == c {
+				continue
+			}
+
+			if s.Solution[ri][ci] != EMPTY && isValid[s.Solution[ri][ci]] {
+				isValid[s.Solution[ri][ci]] = false
+			}
+		}
+	}
+
+	result := make([]rune, 0, len(isValid))
+	for k, v := range isValid {
+		if v {
+			result = append(result, k)
+		}
+	}
+	return result
+}
+
+func (s State) FindOpenings() Openings {
+	result := Openings{
+		Rows: make([]int, SIZE),
+		Cols: make([]int, SIZE),
+		Quad: make([][]int, BLOCK_SIZE),
+	}
+
+	for br := 0; br < BLOCK_SIZE; br++ {
+		result.Quad[br] = make([]int, BLOCK_SIZE)
+	}
+
+	for r := 0; r < 16; r++ {
+		for c := 0; c < 16; c++ {
+			if s.Solution[r][c] == EMPTY {
+				rblock := r >> 2
+				cblock := c >> 2
+
+				result.Rows[r]++
+				result.Cols[c]++
+				result.Quad[rblock][cblock]++
+				result.Coords = append(result.Coords, Coord{r, c})
+			}
+		}
+	}
+
+	return result
+}
+
 type Neighbors [][]State
 
 func (n Neighbors) Len() int {
@@ -100,7 +207,7 @@ func (n FilteredNeighbors) Len() int {
 }
 
 func (n FilteredNeighbors) Less(i, j int) bool {
-	return len(FindNeighbors(n[i])) < len(FindNeighbors(n[j]))
+	return len(FindNeighbors(n[i])) > len(FindNeighbors(n[j]))
 }
 
 func (n FilteredNeighbors) Swap(i, j int) {
@@ -110,35 +217,27 @@ func (n FilteredNeighbors) Swap(i, j int) {
 }
 
 func FindNeighbors(s State) FilteredNeighbors {
-	var ns Neighbors
+	openings := s.FindOpenings()
+	sort.Sort(openings)
+	for _, coord := range openings.Coords {
+		validValues := s.FindValidValues(coord.Row, coord.Col)
 
-	for r := 0; r < 16; r++ {
-		for c := 0; c < 16; c++ {
-			if s.Solution[r][c] != EMPTY {
-				continue
-			}
+		cell := make([]State, 0, len(validValues))
 
-			var cell []State
-
-			for _, ch := range VALID {
-				if s.ValidPlacement(r, c, ch) {
-					ns := s.Clone()
-					ns.Solution[r][c] = ch
-					cell = append(cell, ns)
-				}
-			}
-
-			ns = append(ns, cell)
+		for _, ch := range validValues {
+			ns := s.Clone()
+			ns.Solution[coord.Row][coord.Col] = ch
+			cell = append(cell, ns)
 		}
+
+		return cell
 	}
 
-	sort.Sort(ns)
-
-	return ns[0]
+	return nil
 }
 
 func FindSolution(initial State) State {
-	stack := []State{initial}
+	stack := FilteredNeighbors{initial}
 	for len(stack) > 0 {
 		last := len(stack) - 1
 		element := stack[last]
@@ -149,7 +248,6 @@ func FindSolution(initial State) State {
 		}
 
 		neighbors := FindNeighbors(element)
-		// sort.Sort(neighbors)
 		for _, n := range neighbors {
 			if n.Done() {
 				return n
