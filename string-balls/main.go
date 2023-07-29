@@ -11,6 +11,24 @@ type State struct {
 	d int
 }
 
+func FindLetterNeighbor(l rune, wrap bool) []rune {
+	var result []rune
+	if l > 'a' {
+		result = append(result, l-1)
+	}
+	if l < 'z' {
+		result = append(result, l+1)
+	}
+	if wrap {
+		if l == 'a' {
+			result = append(result, 'z')
+		} else if l == 'z' {
+			result = append(result, 'a')
+		}
+	}
+	return result
+}
+
 func FindCount(center string, radius int) int {
 	var sum int = 1
 	visited := map[string]bool{
@@ -24,13 +42,13 @@ func FindCount(center string, radius int) int {
 		},
 	} // set capacity to 1e6
 	for len(stack) > 0 {
-		last := len(stack) - 1
-		element := stack[last]
-		stack = stack[:last]
-		// element := stack[0]
-		// stack = stack[1:]
+		// last := len(stack) - 1
+		// element := stack[last]
+		// stack = stack[:last]
+		element := stack[0]
+		stack = stack[1:]
 
-		// fmt.Fprintln(os.Stderr, element)
+		fmt.Fprintln(os.Stderr, element)
 
 		if element.d >= radius {
 			continue
@@ -38,27 +56,20 @@ func FindCount(center string, radius int) int {
 
 		// Find neighbors of the given string
 		for ri, r := range element.s {
-			if r < 'z' {
-				celement := []rune(element.s)
-				celement[ri] = r + 1
-				if v, ok := visited[string(celement)]; !(ok && v) {
-					sum++
-					visited[string(celement)] = true
-					stack = append(stack, State{
-						s: string(celement),
-						d: element.d + 1,
-					})
+			wrap := radius-element.d > 25
+			for _, n := range FindLetterNeighbor(r, wrap) {
+				increment := 1
+				if (r == 'a' && n == 'z') || (r == 'z' && n == 'a') {
+					increment = 25
 				}
-			}
-			if r > 'a' {
 				celement := []rune(element.s)
-				celement[ri] = r - 1
+				celement[ri] = n
 				if v, ok := visited[string(celement)]; !(ok && v) {
 					sum++
 					visited[string(celement)] = true
 					stack = append(stack, State{
 						s: string(celement),
-						d: element.d + 1,
+						d: element.d + increment,
 					})
 				}
 			}
