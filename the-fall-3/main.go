@@ -1020,18 +1020,22 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 
 		for _, exit := range exits {
 			if exit == EXIT_INVALID {
-				for _, perm := range prevPerms {
-					nperm := map[int]ObjectCoord{}
+				if len(prevPerms) > 0 {
+					for _, perm := range prevPerms {
+						nperm := map[int]ObjectCoord{}
 
-					for k, v := range perm {
-						if k == ri {
-							continue
+						for k, v := range perm {
+							if k == ri {
+								continue
+							}
+
+							nperm[k] = v
 						}
 
-						nperm[k] = v
+						currentPerms = append(currentPerms, nperm)
 					}
-
-					currentPerms = append(currentPerms, nperm)
+				} else {
+					currentPerms = append(currentPerms, nil)
 				}
 				continue
 			}
@@ -1157,11 +1161,19 @@ func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
 
 	if len(rockPermutations) > 0 {
 		for _, perm := range rockPermutations {
-			for _, exit := range indyExits {
-				if !HasIndyRockCollision(exit, perm) {
+			if perm != nil {
+				for _, exit := range indyExits {
+					if !HasIndyRockCollision(exit, perm) {
+						result = append(result, PathNeighbor{
+							IndyPosition: exit,
+							Rocks:        perm,
+						})
+					}
+				}
+			} else {
+				for _, exit := range indyExits {
 					result = append(result, PathNeighbor{
 						IndyPosition: exit,
-						Rocks:        perm,
 					})
 				}
 			}
@@ -1196,7 +1208,8 @@ func FindMapPath(m Map) []MapPath {
 		st := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		for _, mv := range FindPathNeighbors(m, st) {
+		neighs := FindPathNeighbors(m, st)
+		for _, mv := range neighs {
 			ns := PathState{
 				IndyPosition: mv.IndyPosition,
 				Rocks:        mv.Rocks,
