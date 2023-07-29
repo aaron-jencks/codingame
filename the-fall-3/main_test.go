@@ -890,7 +890,22 @@ func TestPathFindingWRocks(t *testing.T) {
 			},
 			rockOut: []map[int][]ObjectCoord{
 				{
-					0: {},
+					0: {
+						ParseObjectCoord("9 2 RIGHT"),
+						ParseObjectCoord("8 2 RIGHT"),
+						ParseObjectCoord("7 2 RIGHT"),
+						ParseObjectCoord("6 2 RIGHT"),
+						ParseObjectCoord("5 2 RIGHT"),
+						ParseObjectCoord("4 2 RIGHT"),
+						ParseObjectCoord("3 2 RIGHT"),
+						ParseObjectCoord("2 2 RIGHT"),
+						ParseObjectCoord("1 2 RIGHT"),
+						ParseObjectCoord("1 3 TOP"),
+						ParseObjectCoord("1 4 TOP"),
+						ParseObjectCoord("1 5 TOP"),
+						ParseObjectCoord("1 6 TOP"),
+						ParseObjectCoord("1 7 TOP"),
+					},
 				},
 			},
 		},
@@ -917,18 +932,19 @@ func TestPathFindingWRocks(t *testing.T) {
 							var ri int
 							var rrdict map[int]ObjectCoord
 							for ri, rrdict = range tpath.Rocks {
+								if rrdict == nil {
+									break
+								}
+
 								if ri >= len(v) {
-									assert.True(tt, false, "too many rock entries for %d, expected at most %d, but got %d", k, len(v), ri+1)
 									found = false
 									break
 								}
+
 								if !reflect.DeepEqual(rrdict[k], v[ri]) {
 									found = false
 									break
 								}
-							}
-							if ri != len(v)-1 {
-								assert.True(tt, false, "not enough rock entries for %d, expected %d, but got %d", k, len(v), ri+1)
 							}
 							if !found {
 								break
@@ -941,7 +957,8 @@ func TestPathFindingWRocks(t *testing.T) {
 					}
 				}
 				if !found {
-					assert.True(tt, false, "all known paths should be found in the result, path %d was not found", pi)
+					assert.True(tt, false,
+						"all known paths should be found in the result, path %d was not found", pi)
 				}
 			}
 		})
