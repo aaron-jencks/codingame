@@ -19,7 +19,7 @@ func TestLetterNeighbors(t *testing.T) {
 	ns := FindLetterNeighbor('a', true)
 	assert.Contains(t, ns, 'z', "wrapping should include wrapped neighbors")
 	ns = FindLetterNeighbor('z', true)
-	assert.Contains(t, ns, 'z', "wrapping should include wrapped neighbors")
+	assert.Contains(t, ns, 'a', "wrapping should include wrapped neighbors")
 }
 
 func TestTestdepth(t *testing.T) {
