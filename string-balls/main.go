@@ -35,12 +35,11 @@ func FindCount(center string, radius int) int {
 		center: true,
 	}
 
-	stack := []State{
-		{
-			s: center,
-			d: 0,
-		},
-	} // set capacity to 1e6
+	stack := make([]State, 1, 1000000)
+	stack[0] = State{
+		s: center,
+		d: 0,
+	}
 	for len(stack) > 0 {
 		// last := len(stack) - 1
 		// element := stack[last]
@@ -48,7 +47,7 @@ func FindCount(center string, radius int) int {
 		element := stack[0]
 		stack = stack[1:]
 
-		fmt.Fprintln(os.Stderr, element)
+		// fmt.Fprintln(os.Stderr, element)
 
 		if element.d >= radius {
 			continue
