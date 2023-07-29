@@ -32,6 +32,11 @@ func TestTest6(t *testing.T) {
 	assert.Equal(t, 199, result, "counts should equal")
 }
 
+func TestTest7(t *testing.T) {
+	result := FindCount("bye", 100)
+	assert.Equal(t, 17576, result, "counts should equal")
+}
+
 func TestTest8(t *testing.T) {
 	result := FindCount("greece", 11)
 	assert.Equal(t, 181477, result, "counts should equal")
