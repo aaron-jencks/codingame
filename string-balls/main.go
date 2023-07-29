@@ -47,12 +47,6 @@ func FindCount(center string, radius int) int {
 		element := stack[0]
 		stack = stack[1:]
 
-		// fmt.Fprintln(os.Stderr, element)
-
-		if element.d >= radius {
-			continue
-		}
-
 		// Find neighbors of the given string
 		ncount := 0
 		for ri, r := range element.s {
