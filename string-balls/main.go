@@ -54,6 +54,7 @@ func FindCount(center string, radius int) int {
 		}
 
 		// Find neighbors of the given string
+		ncount := 0
 		for ri, r := range element.s {
 			wrap := radius-element.d > 25
 			for _, n := range FindLetterNeighbor(r, wrap) {
@@ -64,15 +65,19 @@ func FindCount(center string, radius int) int {
 				celement := []rune(element.s)
 				celement[ri] = n
 				if v, ok := visited[string(celement)]; !(ok && v) {
-					sum++
+					ncount++
 					visited[string(celement)] = true
-					stack = append(stack, State{
-						s: string(celement),
-						d: element.d + increment,
-					})
+					if element.d+increment < radius {
+						stack = append(stack, State{
+							s: string(celement),
+							d: element.d + increment,
+						})
+					}
 				}
 			}
 		}
+		// fmt.Fprintf(os.Stderr, "Found %d neighbors for %s at depth %d\n", ncount, element.s, element.d)
+		sum += ncount
 	}
 
 	return sum
