@@ -767,6 +767,11 @@ func TestRockPermutations(t *testing.T) {
 					3: ParseObjectCoord("5 2 TOP"),
 				},
 				{
+					0: ParseObjectCoord("2 1 TOP"),
+					1: ParseObjectCoord("0 2 TOP"),
+					3: ParseObjectCoord("5 2 TOP"),
+				},
+				{
 					// should eliminate the two collisions
 					// but leave an echo
 					0: ParseObjectCoord("2 1 TOP"),

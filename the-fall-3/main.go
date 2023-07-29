@@ -1020,6 +1020,19 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 
 		for _, exit := range exits {
 			if exit == EXIT_INVALID {
+				for _, perm := range prevPerms {
+					nperm := map[int]ObjectCoord{}
+
+					for k, v := range perm {
+						if k == ri {
+							continue
+						}
+
+						nperm[k] = v
+					}
+
+					currentPerms = append(currentPerms, nperm)
+				}
 				continue
 			}
 
