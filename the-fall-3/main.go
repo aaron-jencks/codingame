@@ -1019,6 +1019,10 @@ func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
 		currentPerms = nil
 
 		for _, exit := range exits {
+			if exit == EXIT_INVALID {
+				continue
+			}
+
 			nm := ObjectCoord{
 				X:        rock.X,
 				Y:        rock.Y,
