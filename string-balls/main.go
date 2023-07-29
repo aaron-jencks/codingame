@@ -6,10 +6,20 @@ import (
 	"os"
 )
 
+const (
+	NONE = iota
+	DOWN
+	UP
+)
+
 type State struct {
-	s string
-	d int
+	s            string
+	d            int
+	modIndex     int
+	modDirection int
 }
+
+var dupCount int = 0
 
 func FindCount(center string, radius int) int {
 	var sum int = 1
@@ -35,45 +45,63 @@ func FindCount(center string, radius int) int {
 			celement := []rune(element.s)
 			var selement string
 			wrap := radius-element.d > 25
+			var increment int
+			var n rune
 
-			increment := 1
-			n := r - 1
-			if r == 'a' && wrap {
-				n = 'z'
-				increment = 25
-			}
-			if n >= 'a' && n <= 'z' {
-				celement[ri] = n
-				selement = string(celement)
-				if v, ok := visited[selement]; !(ok && v) {
-					ncount++
-					visited[selement] = true
-					if element.d+increment < radius {
-						stack = append(stack, State{
-							s: selement,
-							d: element.d + increment,
-						})
+			if ri != element.modIndex || element.modDirection != UP {
+				increment = 1
+				n = r - 1
+				if r == 'a' && wrap {
+					n = 'z'
+					increment = 25
+				}
+				if n >= 'a' && n <= 'z' {
+					celement[ri] = n
+					selement = string(celement)
+					if v, ok := visited[selement]; !(ok && v) {
+						ncount++
+						visited[selement] = true
+						if element.d+increment < radius {
+							stack = append(stack, State{
+								s:            selement,
+								d:            element.d + increment,
+								modIndex:     ri,
+								modDirection: DOWN,
+							})
+						}
+					} else {
+						dupCount++
 					}
 				}
 			}
 
-			increment = 1
-			n = r + 1
-			if r == 'z' && wrap {
-				n = 'a'
-				increment = 25
+			if r == 'z' && !wrap {
+				continue
 			}
-			if n >= 'a' && n <= 'z' {
-				celement[ri] = n
-				selement = string(celement)
-				if v, ok := visited[selement]; !(ok && v) {
-					ncount++
-					visited[selement] = true
-					if element.d+increment < radius {
-						stack = append(stack, State{
-							s: selement,
-							d: element.d + increment,
-						})
+
+			if ri != element.modIndex || element.modDirection != DOWN {
+				increment = 1
+				n = r + 1
+				if r == 'z' && wrap {
+					n = 'a'
+					increment = 25
+				}
+				if n >= 'a' && n <= 'z' {
+					celement[ri] = n
+					selement = string(celement)
+					if v, ok := visited[selement]; !(ok && v) {
+						ncount++
+						visited[selement] = true
+						if element.d+increment < radius {
+							stack = append(stack, State{
+								s:            selement,
+								d:            element.d + increment,
+								modIndex:     ri,
+								modDirection: UP,
+							})
+						}
+					} else {
+						dupCount++
 					}
 				}
 			}
@@ -109,6 +137,19 @@ func main() {
 	// distance of radius:
 
 	// A bat visited you
-	// fmt.Fprintln(os.Stderr, "Debug messages...")
 	fmt.Println(FindCount(center, radius)) // Write answer to stdout
+	fmt.Fprintf(os.Stderr, "Duplicates found: %d\n", dupCount)
 }
+
+// TODO
+// if we can restrict the direction that each letter can go, then we can eliminate the possibilities of duplicates
+// we begin by populating the stack with words where each individual letter is assigned every possible direction
+// this takes care of radius 1
+// from there we can for each element of the stack, create a copy where each other letter is assigned every possible direction
+// checking to see if that combination of directions has been covered yet.
+// after each round of checks we move the letters in the given direction and push them back onto the stack
+// we repeat this until we reach the desired depth
+// this should avoid duplicate checks because we will have an entity on the stack for each unique possible combinations of directions
+// and we can complete this in exactly radius ticks of the stack
+
+// keep the old version for testing since we know it works and compare it with the new version.
