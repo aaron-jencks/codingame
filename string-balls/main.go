@@ -15,8 +15,8 @@ const (
 type State struct {
 	s            string
 	d            int
-	modIndex     int
-	modDirection int
+	modDistance  []int
+	modDirection []int
 }
 
 var dupCount int = 0
