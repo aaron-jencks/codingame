@@ -1,0 +1,15 @@
+if we make sure that each character has an instance for each possible direction
+on the second iteration, then we can create instances where we assign directions again
+
+> ball
+we create
+ball ball ball ball ball ball ball
+v    ^     ^     v    ^     v    ^
+
+Then on the second level we generate aall, then we do the following
+
+aall aall aall aall aall
+v^   v v  v ^  v  v v  ^
+
+If we have restrictions on the directions, then we can avoid going backwards
+
