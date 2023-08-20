@@ -11,8 +11,10 @@ func Validate(s string, transitions map[int]map[rune]int, start int, accepting m
 	current := start
 	for _, sc := range s {
 		next := transitions[current][sc]
+		// fmt.Fprintf(os.Stderr, "%d -> %d for %c\n", current, next, sc)
 		current = next
 	}
+	// fmt.Fprintf(os.Stderr, "case %s ended up in state %d which is %v\n", s, current, accepting[current])
 	return accepting[current]
 }
 
