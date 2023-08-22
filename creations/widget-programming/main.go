@@ -4,18 +4,122 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
-func Validate(s string, transitions map[int]map[rune]int, start int, accepting map[int]bool) bool {
-	current := start
+type dfa struct {
+	start       int
+	transitions map[int]map[rune]int
+	accepting   map[int]bool
+}
+
+func NewDfa() dfa {
+	return dfa{
+		transitions: map[int]map[rune]int{},
+		accepting:   map[int]bool{},
+	}
+}
+
+func (d *dfa) addEdge(source int, target int, symbol rune) {
+	if v, ok := d.transitions[source]; ok {
+		v[symbol] = target
+	} else {
+		d.transitions[source] = map[rune]int{
+			symbol: target,
+		}
+	}
+}
+
+func (d *dfa) setAccepting(state int, accept bool) {
+	d.accepting[state] = accept
+}
+
+func (d dfa) validate(s string) bool {
+	current := d.start
 	for _, sc := range s {
-		next := transitions[current][sc]
-		// fmt.Fprintf(os.Stderr, "%d -> %d for %c\n", current, next, sc)
+		next := d.transitions[current][sc]
 		current = next
 	}
-	// fmt.Fprintf(os.Stderr, "case %s ended up in state %d which is %v\n", s, current, accepting[current])
-	return accepting[current]
+	return d.accepting[current]
+}
+
+type nfa struct {
+	start       int
+	transitions map[int]map[rune][]int
+	accepting   map[int]bool
+}
+
+func NewNfa() nfa {
+	return nfa{
+		transitions: map[int]map[rune][]int{},
+		accepting:   map[int]bool{},
+	}
+}
+
+func (n *nfa) setAccepting(state int, accept bool) {
+	n.accepting[state] = accept
+}
+
+func (n nfa) containsEdge(source, target int, symbol rune) bool {
+	if v, ok := n.transitions[source]; ok {
+		if tl, ok := v[symbol]; ok {
+			for _, t := range tl {
+				if t == target {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func (n *nfa) addEdge(source int, target int, symbol rune) {
+	if v, ok := n.transitions[source]; ok {
+		if !n.containsEdge(source, target, symbol) {
+			if vl, ok := v[symbol]; ok {
+				v[symbol] = append(vl, target)
+			} else {
+				v[symbol] = []int{target}
+			}
+		}
+	} else {
+		n.transitions[source] = map[rune][]int{
+			symbol: {target},
+		}
+	}
+}
+
+// TODO need to do DFS to find multiple epsilon transitions
+func (n nfa) epsilonExpansion(source int) []int {
+	result := []int{source}
+	if em, ok := n.transitions[source]; ok {
+		if n, ok := em['.']; ok {
+			result = append(result, n...)
+		}
+	}
+	return result
+}
+
+func (n nfa) convert() dfa {
+	result := NewDfa()
+
+	stateNames := map[string]int{}
+	stateCount := 0
+
+	// determine the new state names
+	hasher := func(states []int) int {
+		sort.Slice(states, func(i, j int) bool { return i < j })
+		h := ""
+		for _, s := range states {
+			h += fmt.Sprint(rune(s))
+		}
+		stateNames[h] = stateCount
+		stateCount++
+		return stateCount - 1
+	}
+
+	return result
 }
 
 func main() {
@@ -29,16 +133,14 @@ func main() {
 	scanner.Scan()
 	scanner.Text()
 
-	var start int
+	n := NewNfa()
+
 	scanner.Scan()
-	fmt.Sscan(scanner.Text(), &start)
+	fmt.Sscan(scanner.Text(), &n.start)
 
 	var T int
 	scanner.Scan()
 	fmt.Sscan(scanner.Text(), &T)
-
-	transitions := map[int]map[rune]int{}
-	accepting := map[int]bool{}
 
 	for i := 0; i < T; i++ {
 		var source, target int
@@ -46,16 +148,10 @@ func main() {
 		scanner.Scan()
 		fmt.Sscan(scanner.Text(), &source, &target, &symbol)
 
-		accepting[source] = false
-		accepting[target] = false
+		n.setAccepting(source, false)
+		n.setAccepting(target, false)
 
-		if _, ok := transitions[source]; !ok {
-			transitions[source] = map[rune]int{
-				rune(symbol[0]): target,
-			}
-		} else {
-			transitions[source][rune(symbol[0])] = target
-		}
+		n.addEdge(source, target, rune(symbol[0]))
 	}
 
 	scanner.Scan()
@@ -66,8 +162,10 @@ func main() {
 	for _, acc := range aaccepting {
 		var iacc int
 		fmt.Sscan(acc, &iacc)
-		accepting[iacc] = true
+		n.setAccepting(iacc, true)
 	}
+
+	d := n.convert()
 
 	var C int
 	scanner.Scan()
@@ -76,7 +174,7 @@ func main() {
 	for i := 0; i < C; i++ {
 		scanner.Scan()
 		testcase := scanner.Text()
-		accepted := Validate(testcase, transitions, start, accepting)
+		accepted := d.validate(testcase)
 		if accepted {
 			fmt.Println("accept")
 		} else {
