@@ -116,10 +116,17 @@ func (n *nfa) addEdge(source int, target int, symbol rune) {
 // TODO convert to use an array so that
 // we can find all of the neighbors of several nodes at the same time
 // since during exploration we'll find nodes that are mixed with other nodes
-func (n nfa) epsilonExpansion(source int) []int {
-	result := []int{source}
-	visited := map[int]bool{source: true}
-	stack := []int{source}
+func (n nfa) epsilonExpansion(sources []int) []int {
+	result := make([]int, len(sources))
+	visited := map[int]bool{}
+	stack := make([]int, len(sources))
+
+	for si, s := range sources {
+		result[si] = s
+		stack[si] = s
+		visited[s] = true
+	}
+
 	for len(stack) > 0 {
 		last := len(stack) - 1
 		element := stack[last]
@@ -137,39 +144,98 @@ func (n nfa) epsilonExpansion(source int) []int {
 			}
 		}
 	}
+
 	return result
+}
+
+// determine the new state names
+func NodeHasher(states []int, stateNames map[string]int, stateCount int) int {
+	sort.Slice(states, func(i, j int) bool { return i < j })
+	h := ""
+	for _, s := range states {
+		h += fmt.Sprint(rune(s))
+	}
+	stateNames[h] = stateCount
+	stateCount++
+	return stateCount - 1
 }
 
 func (n nfa) convert() dfa {
 	result := NewDfa()
 
+	visited := map[int]bool{n.start: true}
 	stateNames := map[string]int{}
 	stateCount := 0
 
 	for _, node := range n.getNodes() {
 		stateNames[fmt.Sprint(node)] = node
-	}
-
-	// determine the new state names
-	hasher := func(states []int) int {
-		sort.Slice(states, func(i, j int) bool { return i < j })
-		h := ""
-		for _, s := range states {
-			h += fmt.Sprint(rune(s))
+		if node > stateCount {
+			stateCount = node + 1
 		}
-		stateNames[h] = stateCount
-		stateCount++
-		return stateCount - 1
 	}
 
-	stack := [][]int{{n.start}}
+	new_start := n.createExpandedNode([]int{n.start}, stateNames, stateCount)
+
+	result.start = new_start.nodeId
+	if new_start.accepting {
+		result.setAccepting(new_start.nodeId, true)
+	}
+
+	stack := []expandedNode{new_start}
 	for len(stack) > 0 {
 		last := len(stack) - 1
 		element := stack[last]
 		stack = stack[:last]
 
-		node := hasher(element)
+		for _, letter := range n.alphabet {
+			connected_nodes := map[int]bool{}
 
+			for _, cn := range element.nodes {
+				if trans, ok := n.transitions[cn]; ok {
+					if neighbors, ok := trans[letter]; ok {
+						for _, neigh := range neighbors {
+							connected_nodes[neigh] = true
+						}
+					}
+				}
+			}
+
+			new_node := make([]int, 0, len(connected_nodes))
+			for k := range connected_nodes {
+				new_node = append(new_node, k)
+			}
+
+			nni := NodeHasher(new_node, stateNames, stateCount)
+
+			result.addEdge(node, nni, letter)
+
+			if _, ok := visited[nni]; !ok {
+				visited[nni] = true
+				stack = append(stack, new_node)
+			}
+		}
+	}
+
+	return result
+}
+
+type expandedNode struct {
+	nodes     []int
+	accepting bool
+	nodeId    int
+}
+
+func (n nfa) createExpandedNode(nodes []int, stateNames map[string]int, stateCount int) expandedNode {
+	result := expandedNode{}
+
+	result.nodes = n.epsilonExpansion(nodes)
+	result.nodeId = NodeHasher(result.nodes, stateNames, stateCount)
+
+	for _, node := range result.nodes {
+		if _, ok := n.accepting[node]; ok {
+			result.accepting = true
+			break
+		}
 	}
 
 	return result
