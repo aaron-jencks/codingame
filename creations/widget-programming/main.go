@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 )
+
+const EPSILON = '.'
 
 type dfa struct {
 	start       int
@@ -90,12 +91,25 @@ func (n *nfa) addEdge(source int, target int, symbol rune) {
 	}
 }
 
-// TODO need to do DFS to find multiple epsilon transitions
 func (n nfa) epsilonExpansion(source int) []int {
 	result := []int{source}
-	if em, ok := n.transitions[source]; ok {
-		if n, ok := em['.']; ok {
-			result = append(result, n...)
+	visited := map[int]bool{source: true}
+	stack := []int{source}
+	for len(stack) > 0 {
+		last := len(stack) - 1
+		element := stack[last]
+		stack = stack[:last]
+
+		if em, ok := n.transitions[element]; ok {
+			if n, ok := em[EPSILON]; ok {
+				for _, neigh := range n {
+					if _, ok := visited[neigh]; !ok {
+						visited[neigh] = true
+						result = append(result, neigh)
+						stack = append(stack, neigh)
+					}
+				}
+			}
 		}
 	}
 	return result
@@ -104,20 +118,20 @@ func (n nfa) epsilonExpansion(source int) []int {
 func (n nfa) convert() dfa {
 	result := NewDfa()
 
-	stateNames := map[string]int{}
-	stateCount := 0
+	// stateNames := map[string]int{}
+	// stateCount := 0
 
 	// determine the new state names
-	hasher := func(states []int) int {
-		sort.Slice(states, func(i, j int) bool { return i < j })
-		h := ""
-		for _, s := range states {
-			h += fmt.Sprint(rune(s))
-		}
-		stateNames[h] = stateCount
-		stateCount++
-		return stateCount - 1
-	}
+	// hasher := func(states []int) int {
+	// 	sort.Slice(states, func(i, j int) bool { return i < j })
+	// 	h := ""
+	// 	for _, s := range states {
+	// 		h += fmt.Sprint(rune(s))
+	// 	}
+	// 	stateNames[h] = stateCount
+	// 	stateCount++
+	// 	return stateCount - 1
+	// }
 
 	return result
 }
