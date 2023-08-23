@@ -207,11 +207,17 @@ func (n nfa) convert() dfa {
 
 			nni := NodeHasher(new_node, stateNames, stateCount)
 
-			result.addEdge(node, nni, letter)
+			result.addEdge(element.nodeId, nni, letter)
 
 			if _, ok := visited[nni]; !ok {
 				visited[nni] = true
-				stack = append(stack, new_node)
+
+				enn := n.createExpandedNode(new_node, stateNames, stateCount)
+				if enn.accepting {
+					result.accepting[enn.nodeId] = true
+				}
+
+				stack = append(stack, enn)
 			}
 		}
 	}
