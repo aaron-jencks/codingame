@@ -113,6 +113,9 @@ func (n *nfa) addEdge(source int, target int, symbol rune) {
 	}
 }
 
+// TODO convert to use an array so that
+// we can find all of the neighbors of several nodes at the same time
+// since during exploration we'll find nodes that are mixed with other nodes
 func (n nfa) epsilonExpansion(source int) []int {
 	result := []int{source}
 	visited := map[int]bool{source: true}
