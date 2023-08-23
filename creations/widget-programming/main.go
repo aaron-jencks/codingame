@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -49,6 +50,7 @@ type nfa struct {
 	start       int
 	transitions map[int]map[rune][]int
 	accepting   map[int]bool
+	alphabet    []rune
 }
 
 func NewNfa() nfa {
@@ -73,6 +75,26 @@ func (n nfa) containsEdge(source, target int, symbol rune) bool {
 		}
 	}
 	return false
+}
+
+func (n nfa) getNodes() []int {
+	result := []int{n.start}
+	visited := map[int]bool{n.start: true}
+	for k, v := range n.transitions {
+		if _, ok := visited[k]; !ok {
+			result = append(result, k)
+			visited[k] = true
+		}
+		for _, neighbors := range v {
+			for _, neigh := range neighbors {
+				if _, ok := visited[neigh]; !ok {
+					result = append(result, neigh)
+					visited[neigh] = true
+				}
+			}
+		}
+	}
+	return result
 }
 
 func (n *nfa) addEdge(source int, target int, symbol rune) {
@@ -118,20 +140,34 @@ func (n nfa) epsilonExpansion(source int) []int {
 func (n nfa) convert() dfa {
 	result := NewDfa()
 
-	// stateNames := map[string]int{}
-	// stateCount := 0
+	stateNames := map[string]int{}
+	stateCount := 0
+
+	for _, node := range n.getNodes() {
+		stateNames[fmt.Sprint(node)] = node
+	}
 
 	// determine the new state names
-	// hasher := func(states []int) int {
-	// 	sort.Slice(states, func(i, j int) bool { return i < j })
-	// 	h := ""
-	// 	for _, s := range states {
-	// 		h += fmt.Sprint(rune(s))
-	// 	}
-	// 	stateNames[h] = stateCount
-	// 	stateCount++
-	// 	return stateCount - 1
-	// }
+	hasher := func(states []int) int {
+		sort.Slice(states, func(i, j int) bool { return i < j })
+		h := ""
+		for _, s := range states {
+			h += fmt.Sprint(rune(s))
+		}
+		stateNames[h] = stateCount
+		stateCount++
+		return stateCount - 1
+	}
+
+	stack := [][]int{{n.start}}
+	for len(stack) > 0 {
+		last := len(stack) - 1
+		element := stack[last]
+		stack = stack[:last]
+
+		node := hasher(element)
+
+	}
 
 	return result
 }
@@ -145,9 +181,12 @@ func main() {
 	fmt.Sscan(scanner.Text(), &N)
 
 	scanner.Scan()
-	scanner.Text()
+	alpha := strings.Split(scanner.Text(), " ")
 
 	n := NewNfa()
+	for _, a := range alpha {
+		n.alphabet = append(n.alphabet, rune(a[0]))
+	}
 
 	scanner.Scan()
 	fmt.Sscan(scanner.Text(), &n.start)
