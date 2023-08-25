@@ -108,6 +108,9 @@ func TestTestCases(t *testing.T) {
 		"odd_numbers",
 		"wide_example",
 		"wide_example_2",
+		"first_last_same",
+		"first_last_different",
+		"theres",
 	}
 
 	for _, tc := range tcs {
