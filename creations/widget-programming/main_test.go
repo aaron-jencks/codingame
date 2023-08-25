@@ -29,7 +29,7 @@ func TestEpsilonExpansion(t *testing.T) {
 		},
 	}
 
-	neighbors := n.epsilonExpansion(0)
+	neighbors := n.epsilonExpansion([]int{0})
 
 	assert.Equal(t, []int{0, 1, 2, 3, 4, 7, 8, 5}, neighbors, "neighbor array mismatch")
 }
