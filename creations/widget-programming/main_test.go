@@ -106,6 +106,8 @@ func TestTestCases(t *testing.T) {
 	tcs := []string{
 		"even_numbers",
 		"odd_numbers",
+		"wide_example",
+		"wide_example_2",
 	}
 
 	for _, tc := range tcs {
