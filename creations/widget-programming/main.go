@@ -253,7 +253,7 @@ func (n nfa) createExpandedNode(nodes []int, stateNames map[string]int, stateCou
 	result.nodeId = NodeHasher(result.nodes, stateNames, stateCount)
 
 	for _, node := range result.nodes {
-		if _, ok := n.accepting[node]; ok {
+		if acc, ok := n.accepting[node]; ok && acc {
 			result.accepting = true
 			break
 		}
