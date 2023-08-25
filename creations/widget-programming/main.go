@@ -146,15 +146,18 @@ func (n nfa) epsilonExpansion(sources []int) []int {
 }
 
 // determine the new state names
-func NodeHasher(states []int, stateNames map[string]int, stateCount int) int {
-	sort.Slice(states, func(i, j int) bool { return i < j })
+func NodeHasher(states []int, stateNames map[string]int, stateCount *int) int {
+	sort.Slice(states, func(i, j int) bool { return states[i] < states[j] }) // must be a slice
 	h := ""
 	for _, s := range states {
 		h += fmt.Sprint(rune(s))
 	}
-	stateNames[h] = stateCount
-	stateCount++
-	return stateCount - 1
+	if si, ok := stateNames[h]; ok {
+		return si
+	}
+	stateNames[h] = *stateCount
+	*stateCount++
+	return *stateCount - 1
 }
 
 func (n nfa) convert() dfa {
@@ -166,12 +169,23 @@ func (n nfa) convert() dfa {
 
 	for _, node := range n.getNodes() {
 		stateNames[fmt.Sprint(node)] = node
-		if node > stateCount {
+		if node >= stateCount {
 			stateCount = node + 1
 		}
 	}
 
-	new_start := n.createExpandedNode([]int{n.start}, stateNames, stateCount)
+	// setup trap state
+	stateNames[fmt.Sprint(stateCount)] = stateCount
+
+	trapId := stateCount
+
+	for _, l := range n.alphabet {
+		result.addEdge(stateCount, stateCount, l)
+	}
+
+	stateCount++
+
+	new_start := n.createExpandedNode([]int{n.start}, stateNames, &stateCount)
 
 	result.start = new_start.nodeId
 	if new_start.accepting {
@@ -197,19 +211,22 @@ func (n nfa) convert() dfa {
 				}
 			}
 
+			if len(connected_nodes) == 0 {
+				connected_nodes[trapId] = true
+			}
+
 			new_node := make([]int, 0, len(connected_nodes))
 			for k := range connected_nodes {
 				new_node = append(new_node, k)
 			}
 
-			nni := NodeHasher(new_node, stateNames, stateCount)
+			enn := n.createExpandedNode(new_node, stateNames, &stateCount)
 
-			result.addEdge(element.nodeId, nni, letter)
+			result.addEdge(element.nodeId, enn.nodeId, letter)
 
-			if _, ok := visited[nni]; !ok {
-				visited[nni] = true
+			if _, ok := visited[enn.nodeId]; !ok {
+				visited[enn.nodeId] = true
 
-				enn := n.createExpandedNode(new_node, stateNames, stateCount)
 				if enn.accepting {
 					result.accepting[enn.nodeId] = true
 				}
@@ -228,7 +245,7 @@ type expandedNode struct {
 	nodeId    int
 }
 
-func (n nfa) createExpandedNode(nodes []int, stateNames map[string]int, stateCount int) expandedNode {
+func (n nfa) createExpandedNode(nodes []int, stateNames map[string]int, stateCount *int) expandedNode {
 	result := expandedNode{}
 
 	result.nodes = n.epsilonExpansion(nodes)
