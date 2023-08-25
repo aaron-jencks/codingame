@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strings"
@@ -261,8 +262,8 @@ func (n nfa) createExpandedNode(nodes []int, stateNames map[string]int, stateCou
 	return result
 }
 
-func main() {
-	scanner := bufio.NewScanner(os.Stdin)
+func ParseInput(r io.Reader) []string {
+	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, 1000000), 1000000)
 
 	var N int
@@ -313,14 +314,22 @@ func main() {
 	scanner.Scan()
 	fmt.Sscan(scanner.Text(), &C)
 
+	var result []string
 	for i := 0; i < C; i++ {
 		scanner.Scan()
 		testcase := scanner.Text()
 		accepted := d.validate(testcase)
 		if accepted {
-			fmt.Println("accept")
+			result = append(result, "accept")
 		} else {
-			fmt.Println("reject")
+			result = append(result, "reject")
 		}
+	}
+	return result
+}
+
+func main() {
+	for _, o := range ParseInput(os.Stdin) {
+		fmt.Println(o)
 	}
 }

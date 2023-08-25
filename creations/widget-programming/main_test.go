@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,5 +99,28 @@ func TestConversion1(t *testing.T) {
 
 	for k, v := range tcs {
 		assert.Equal(t, v, dfa.validate(k), "invalid validation for string %s", k)
+	}
+}
+
+func TestTestCases(t *testing.T) {
+	tcs := []string{
+		"even_numbers",
+		"odd_numbers",
+	}
+
+	for _, tc := range tcs {
+		in, err := os.ReadFile(fmt.Sprintf("%s.in.txt", tc))
+		assert.NoError(t, err, "unexpected error reading test input")
+
+		out, err := os.ReadFile(fmt.Sprintf("%s.out.txt", tc))
+		assert.NoError(t, err, "unexpected error reading test output")
+		outlines := strings.Split(string(out), "\n")
+		for oi := range outlines {
+			outlines[oi] = strings.Trim(outlines[oi], "\r")
+		}
+
+		t.Run(tc, func(tt *testing.T) {
+			assert.Equal(tt, outlines, ParseInput(strings.NewReader(string(in))), "output mismatch")
+		})
 	}
 }
