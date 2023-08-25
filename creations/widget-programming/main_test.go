@@ -112,6 +112,8 @@ func TestTestCases(t *testing.T) {
 		"first_last_different",
 		"theres",
 		"thous",
+		"more_epsilon",
+		"concatenation",
 	}
 
 	for _, tc := range tcs {
