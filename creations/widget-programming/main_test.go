@@ -111,6 +111,7 @@ func TestTestCases(t *testing.T) {
 		"first_last_same",
 		"first_last_different",
 		"theres",
+		"thous",
 	}
 
 	for _, tc := range tcs {
