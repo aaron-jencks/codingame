@@ -7,35 +7,34 @@ import (
 )
 
 const (
-	NONE = iota
+	NONE uint8 = iota
 	DOWN
 	UP
 )
 
 type State struct {
-	s            string
-	d            int
-	modIndex     int
-	modDirection int
+	s              string
+	d              uint8
+	modDistance    []uint8
+	modDirection   []uint8
+	modRestriction []uint8
 }
 
 var dupCount int = 0
 
 func FindCount(center string, radius int) int {
 	var sum int = 1
-	visited := map[string]bool{
-		center: true,
-	}
+	visited := map[string]bool{}
 
 	stack := make([]State, 1, 1000000)
 	stack[0] = State{
-		s: center,
-		d: 0,
+		s:              center,
+		d:              0,
+		modDistance:    make([]uint8, len(center)),
+		modDirection:   make([]uint8, len(center)),
+		modRestriction: make([]uint8, len(center)),
 	}
 	for len(stack) > 0 {
-		// last := len(stack) - 1
-		// element := stack[last]
-		// stack = stack[:last]
 		element := stack[0]
 		stack = stack[1:]
 

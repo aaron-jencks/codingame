@@ -1,0 +1,32 @@
+2
+a b
+0
+8
+0 1 .
+1 1 a
+1 2 a
+1 2 b
+2 0 a
+2 2 a
+2 3 b
+3 1 b
+1
+0
+17
+
+ba
+aa
+abbaaaaaaa
+abbba
+bbaababababbbbaaaabbabab
+bbbbaaaaaa
+abaaaa
+bb
+bbb
+abb
+ab
+a
+b
+bbaaaaa
+bababaaaa
+bbbababaaa
