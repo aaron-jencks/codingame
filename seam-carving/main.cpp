@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -18,6 +19,8 @@ struct image_t {
         }
         return v;
     }
+
+    inline uint8_t* operator [](int row) { return image[row]; }
 };
 
 int16_t find_coord_energy(uint8_t x, uint8_t y, image_t image) {
@@ -52,13 +55,13 @@ struct path_return_t {
     bool found;
 };
 
-path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, uint8_t row, uint8_t h, uint8_t w) {
+path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, uint8_t row, image_t img) {
     path_t base_path = path_in;
     base_path.path.push_back(col);
-    int16_t prev_energy = energy_map[row-1][col];
-    base_path.total_energy += prev_energy;
+    int16_t prev_intensity = img[row-1][col];
+    base_path.total_energy += energy_map[row-1][col];;
 
-    if(row == h) {
+    if(row == img.h) {
         // base case
         return {base_path, true};
     }
@@ -67,14 +70,14 @@ path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, u
 
     // TODO memoization of later paths
     if(col > 0) {
-        int16_t lenergy = energy_map[row][col-1];
-        if(abs(lenergy-prev_energy) <= 1) {
-            cpath = find_path_rec(base_path, energy_map, col-1, row+1, h, w);
+        int16_t lintensity = img[row][col-1];
+        if(abs(lintensity-prev_intensity) <= 1) {
+            cpath = find_path_rec(base_path, energy_map, col-1, row+1, img);
         }
     }
-    int16_t cenergy = energy_map[row][col];
-    if(abs(cenergy-prev_energy) <= 1) {
-        path_return_t npath = find_path_rec(base_path, energy_map, col-1, row+1, h, w);
+    int16_t cintensity = img[row][col];
+    if(abs(cintensity-prev_intensity) <= 1) {
+        path_return_t npath = find_path_rec(base_path, energy_map, col-1, row+1, img);
         if(cpath.found) {
             if(npath.found && npath.best_path < cpath.best_path) {
             }
@@ -82,10 +85,10 @@ path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, u
             cpath = npath;
         }
     }
-    if(col < w-1) {
-        int16_t renergy = energy_map[row][col+1];
-        if(abs(renergy-prev_energy) <= 1) {
-            path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, h, w);
+    if(col < img.w-1) {
+        int16_t renergy = img[row][col+1];
+        if(abs(renergy-prev_intensity) <= 1) {
+            path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, img);
             if(cpath.found) {
                 if(npath.found && npath.best_path < cpath.best_path) {
                     cpath = npath;
@@ -99,8 +102,8 @@ path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, u
     return cpath;
 }
 
-path_return_t find_path(int16_t** energy_map, uint8_t col, uint8_t h, uint8_t w) {
-    return find_path_rec(path_t{vector<uint8_t>(), 0}, energy_map, col, 1, h, w);
+path_return_t find_path(int16_t** energy_map, uint8_t col, image_t img) {
+    return find_path_rec(path_t{vector<uint8_t>(), 0}, energy_map, col, 1, img);
 }
 
 struct heatmap_t {
@@ -111,14 +114,17 @@ struct heatmap_t {
 
 heatmap_t generate_heatmap(image_t image) {
     heatmap_t hm = {image, new int16_t*[image.h]};
+    cerr << "energies:" << endl;
     for(uint8_t i = 0; i < image.h; i++) {
         hm.energies[i] = new int16_t[image.w];
         for(uint8_t j = 0; j < image.w; j++) {
             hm.energies[i][j] = find_coord_energy(j, i, image);
+            cerr << setw(3) << (int)hm.energies[i][j] << " ";
         }
+        cerr << endl;
     }
     for(uint8_t c = 0; c < image.w; c++) {
-        path_return_t pp = find_path(hm.energies, c, image.h, image.w);
+        path_return_t pp = find_path(hm.energies, c, image);
         cerr << "checking path for " << (int)c << " returned " << pp.found << endl;
         if(pp.found && pp.best_path.valid(image.h)) {
             cerr << "found path for " << (int)c << " " << pp.best_path << endl;
@@ -180,7 +186,7 @@ int main()
             int value;
             cin >> value; cin.ignore();
             image[i][j] = (uint8_t)value;
-            cerr << (int)image[i][j] << ' ';
+            cerr << setw(3) << (int)image[i][j] << ' ';
         }
         cerr << endl;
     }
