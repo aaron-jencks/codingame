@@ -10,6 +10,14 @@ struct image_t {
     uint8_t h;
     uint8_t w;
     uint8_t** image;
+
+    uint8_t remove_pixel(uint8_t x, uint8_t y) {
+        uint8_t v = image[y][x];
+        for(uint8_t cx = x+1; cx < w; cx++) {
+            image[y][cx-1] = image[y][cx];
+        }
+        return v;
+    }
 };
 
 int16_t find_coord_energy(uint8_t x, uint8_t y, image_t image) {
@@ -29,6 +37,8 @@ struct path_t {
     inline bool operator < (const path_t& p) const {
         return total_energy < p.total_energy || (total_energy == p.total_energy && path[0] < p.path[0]);
     }
+
+    inline uint8_t operator [] (int i) { return path[i]; }
 };
 
 struct path_return_t {
@@ -106,6 +116,34 @@ heatmap_t generate_heatmap(image_t image) {
     return hm;
 }
 
+struct seam_cut_return_t {
+    image_t img;
+    heatmap_t hm;
+    int16_t path_energy;
+    bool found;
+};
+
+seam_cut_return_t perform_seam_cut(image_t img, heatmap_t hm) {
+    if(!hm.paths.size() || !img.w) return {img, hm, 0, false};
+    path_t best_path;
+    bool first = true;
+    for(auto p: hm.paths) {
+        if(first) {
+            best_path = p;
+            first = false;
+        } else if(p < best_path) best_path = p;
+    }
+    // TODO add 2d array of booleans that toggle a pixel as having been cropped or not
+    // that way we don't have to actually remove them from the image
+    for(uint8_t row = 0; row < img.h; row++) {
+        img.remove_pixel(best_path[row], row);
+    }
+    img.w--;
+    // TODO perform optimal regeneration of heatmap
+    // based on width of chosen path and width of current paths
+    return {img, hm, best_path.total_energy, true};
+}
+
 int main()
 {
     string magic;
@@ -119,6 +157,10 @@ int main()
     int maxintensity;
     cin >> maxintensity; cin.ignore();
 
+    cerr << w << ' ' << h << endl;
+    cerr << v << endl;
+    cerr << maxintensity << endl;
+
     uint8_t** image = new uint8_t*[h];
     for (int i = 0; i < h; i++) {
         image[i] = new uint8_t[w];
@@ -127,10 +169,13 @@ int main()
         }
     }
 
-    image_t img_state = {h, w, image};
+    image_t img_state = {(uint8_t)h, (uint8_t)w, image};
+    heatmap_t hm = generate_heatmap(img_state);
 
-    // Write an answer using cout. DON'T FORGET THE "<< endl"
-    // To debug: cerr << "Debug messages..." << endl;
-
-    cout << "answer" << endl;
+    while(img_state.w > v) {
+        seam_cut_return_t cut = perform_seam_cut(img_state, hm);
+        cout << cut.path_energy << endl;
+        img_state = cut.img;
+        hm = generate_heatmap(img_state);
+    }
 }
