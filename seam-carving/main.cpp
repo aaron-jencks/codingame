@@ -109,27 +109,42 @@ path_return_t find_path(int16_t** energy_map, uint8_t col, image_t img) {
 struct heatmap_t {
     image_t image;
     int16_t** energies;
-    vector<path_t> paths;
+    int16_t** path_map;
 };
 
 heatmap_t generate_heatmap(image_t image) {
-    heatmap_t hm = {image, new int16_t*[image.h]};
+    heatmap_t hm = {image, new int16_t*[image.h], new int16_t*[image.h]};
     cerr << "energies:" << endl;
     for(uint8_t i = 0; i < image.h; i++) {
         hm.energies[i] = new int16_t[image.w];
+        hm.path_map[i] = new int16_t[image.w];
         for(uint8_t j = 0; j < image.w; j++) {
             hm.energies[i][j] = find_coord_energy(j, i, image);
             cerr << setw(3) << (int)hm.energies[i][j] << " ";
         }
         cerr << endl;
     }
-    for(uint8_t c = 0; c < image.w; c++) {
-        path_return_t pp = find_path(hm.energies, c, image);
-        cerr << "checking path for " << (int)c << " returned " << pp.found << endl;
-        if(pp.found && pp.best_path.valid(image.h)) {
-            cerr << "found path for " << (int)c << " " << pp.best_path << endl;
-            hm.paths.push_back(pp.best_path);
+    cerr << "path cost:" << endl;
+    for(uint8_t col = 0; col < image.w; col++) {
+        hm.path_map[image.h-1][col] = hm.energies[image.h-1][col];
+        cerr << setw(4) << hm.path_map[image.h-1][col] << ' ';
+    }
+    cerr << endl;
+    // memoize the energy map for use in pathing
+    for(int16_t row = image.h-2; row >= 0; row--) {
+        for(uint8_t col = 0; col < image.w; col++) {
+            int16_t pv = 32767; // int16 positive max
+            if(col > 0) pv = hm.path_map[row+1][col-1];
+            int16_t tpv = hm.path_map[row+1][col];
+            if(tpv < pv) pv = tpv;
+            if(col < image.w-1) {
+                tpv = hm.path_map[row+1][col+1];
+                if(tpv < pv) pv = tpv;
+            }
+            hm.path_map[row][col] = hm.energies[row][col] + pv;
+            cerr << setw(4) << hm.path_map[row][col] << ' ';
         }
+        cerr << endl;
     }
     return hm;
 }
