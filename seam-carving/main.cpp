@@ -41,6 +41,12 @@ struct path_t {
     inline uint8_t operator [] (int i) { return path[i]; }
 };
 
+ostream& operator << (ostream& out, const path_t& p) {
+    out << "path(" << p.total_energy << "): ";
+    for(auto pv: p.path) out << (int)pv << ", ";
+    return out;
+}
+
 struct path_return_t {
     path_t best_path;
     bool found;
@@ -76,15 +82,17 @@ path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, u
             cpath = npath;
         }
     }
-    int16_t renergy = energy_map[row][col+1];
-    if(abs(renergy-prev_energy) <= 1) {
-        path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, h, w);
-        if(cpath.found) {
-            if(npath.found && npath.best_path < cpath.best_path) {
+    if(col < w-1) {
+        int16_t renergy = energy_map[row][col+1];
+        if(abs(renergy-prev_energy) <= 1) {
+            path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, h, w);
+            if(cpath.found) {
+                if(npath.found && npath.best_path < cpath.best_path) {
+                    cpath = npath;
+                }
+            } else {
                 cpath = npath;
             }
-        } else {
-            cpath = npath;
         }
     }
 
@@ -111,7 +119,10 @@ heatmap_t generate_heatmap(image_t image) {
     }
     for(uint8_t c = 0; c < image.w; c++) {
         path_return_t pp = find_path(hm.energies, c, image.h, image.w);
-        if(pp.found && pp.best_path.valid(image.h)) hm.paths.push_back(pp.best_path);
+        if(pp.found && pp.best_path.valid(image.h)) {
+            cerr << "found path for " << (int)c << " " << pp.best_path << endl;
+            hm.paths.push_back(pp.best_path);
+        }
     }
     return hm;
 }
@@ -165,8 +176,12 @@ int main()
     for (int i = 0; i < h; i++) {
         image[i] = new uint8_t[w];
         for (int j = 0; j < w; j++) {
-            cin >> image[i][j]; cin.ignore();
+            int value;
+            cin >> value; cin.ignore();
+            image[i][j] = (uint8_t)value;
+            cerr << (int)image[i][j] << ' ';
         }
+        cerr << endl;
     }
 
     image_t img_state = {(uint8_t)h, (uint8_t)w, image};
