@@ -1,5 +1,5 @@
 seam: main.cpp
-	g++ -o $@ $<
+	g++ -g -o $@ $<
 
 .PROXY:sample
 sample: seam
