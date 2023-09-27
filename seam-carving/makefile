@@ -4,3 +4,7 @@ seam: main.cpp
 .PROXY:sample
 sample: seam
 	cat ./sample.txt | ./$<
+
+.PROXY:clean
+clean:
+	rm -f ./seam
