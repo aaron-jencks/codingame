@@ -58,22 +58,34 @@ struct heatmap_t {
 
 heatmap_t generate_heatmap(image_t image) {
     heatmap_t hm = {image, new int16_t*[image.h], new int16_t*[image.h]};
+#ifdef DEBUG
     cerr << "energies:" << endl;
+#endif
     for(uint8_t i = 0; i < image.h; i++) {
         hm.energies[i] = new int16_t[image.w];
         hm.path_map[i] = new int16_t[image.w];
         for(uint8_t j = 0; j < image.w; j++) {
             hm.energies[i][j] = find_coord_energy(j, i, image);
+#ifdef DEBUG
             cerr << setw(3) << (int)hm.energies[i][j] << " ";
+#endif
         }
+#ifdef DEBUG
         cerr << endl;
+#endif
     }
+#ifdef DEBUG
     cerr << "path costs:" << endl;
+#endif
     for(uint8_t col = 0; col < image.w; col++) {
         hm.path_map[image.h-1][col] = hm.energies[image.h-1][col];
+#ifdef DEBUG
         cerr << setw(4) << hm.path_map[image.h-1][col] << ' ';
+#endif
     }
+#ifdef DEBUG
     cerr << endl;
+#endif
     // memoize the energy map for use in pathing
     for(int16_t row = image.h-2; row >= 0; row--) {
         for(uint8_t col = 0; col < image.w; col++) {
@@ -86,9 +98,13 @@ heatmap_t generate_heatmap(image_t image) {
                 if(tpv < pv) pv = tpv;
             }
             hm.path_map[row][col] = hm.energies[row][col] + pv;
+#ifdef DEBUG
             cerr << setw(4) << hm.path_map[row][col] << ' ';
+#endif
         }
+#ifdef DEBUG
         cerr << endl;
+#endif
     }
     return hm;
 }
@@ -159,9 +175,15 @@ int main()
     int maxintensity;
     cin >> maxintensity; cin.ignore();
 
+#ifdef DEBUG
     cerr << w << ' ' << h << endl;
+#endif
+#ifdef DEBUG
     cerr << v << endl;
+#endif
+#ifdef DEBUG
     cerr << maxintensity << endl;
+#endif
 
     uint8_t** image = new uint8_t*[h];
     for (int i = 0; i < h; i++) {
@@ -170,9 +192,13 @@ int main()
             int value;
             cin >> value; cin.ignore();
             image[i][j] = (uint8_t)value;
+#ifdef DEBUG
             cerr << setw(3) << (int)image[i][j] << ' ';
+#endif
         }
+#ifdef DEBUG
         cerr << endl;
+#endif
     }
 
     image_t img_state = {(uint8_t)h, (uint8_t)w, image};
