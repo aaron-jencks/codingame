@@ -50,62 +50,6 @@ ostream& operator << (ostream& out, const path_t& p) {
     return out;
 }
 
-struct path_return_t {
-    path_t best_path;
-    bool found;
-};
-
-path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, uint8_t row, image_t img) {
-    path_t base_path = path_in;
-    base_path.path.push_back(col);
-    int16_t prev_intensity = img[row-1][col];
-    base_path.total_energy += energy_map[row-1][col];;
-
-    if(row == img.h) {
-        // base case
-        return {base_path, true};
-    }
-
-    path_return_t cpath{path_t{}, false};
-
-    // TODO memoization of later paths
-    if(col > 0) {
-        int16_t lintensity = img[row][col-1];
-        if(abs(lintensity-prev_intensity) <= 1) {
-            cpath = find_path_rec(base_path, energy_map, col-1, row+1, img);
-        }
-    }
-    int16_t cintensity = img[row][col];
-    if(abs(cintensity-prev_intensity) <= 1) {
-        path_return_t npath = find_path_rec(base_path, energy_map, col-1, row+1, img);
-        if(cpath.found) {
-            if(npath.found && npath.best_path < cpath.best_path) {
-            }
-        } else {
-            cpath = npath;
-        }
-    }
-    if(col < img.w-1) {
-        int16_t renergy = img[row][col+1];
-        if(abs(renergy-prev_intensity) <= 1) {
-            path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, img);
-            if(cpath.found) {
-                if(npath.found && npath.best_path < cpath.best_path) {
-                    cpath = npath;
-                }
-            } else {
-                cpath = npath;
-            }
-        }
-    }
-
-    return cpath;
-}
-
-path_return_t find_path(int16_t** energy_map, uint8_t col, image_t img) {
-    return find_path_rec(path_t{vector<uint8_t>(), 0}, energy_map, col, 1, img);
-}
-
 struct heatmap_t {
     image_t image;
     int16_t** energies;
@@ -124,7 +68,7 @@ heatmap_t generate_heatmap(image_t image) {
         }
         cerr << endl;
     }
-    cerr << "path cost:" << endl;
+    cerr << "path costs:" << endl;
     for(uint8_t col = 0; col < image.w; col++) {
         hm.path_map[image.h-1][col] = hm.energies[image.h-1][col];
         cerr << setw(4) << hm.path_map[image.h-1][col] << ' ';
@@ -149,23 +93,48 @@ heatmap_t generate_heatmap(image_t image) {
     return hm;
 }
 
+path_t find_path(heatmap_t hm) {
+    path_t result = {vector<uint8_t>(), 0};
+    uint8_t current_col = 255;
+    int16_t current_val = 32767;
+    for(uint8_t c = 0; c < hm.image.w; c++) {
+        if(hm.path_map[0][c] < current_val) {
+            current_col = c;
+            current_val = hm.path_map[0][c];
+        }
+    }
+    result.path.push_back(current_col);
+    result.total_energy = current_val;
+    for(uint8_t h = 1; h < hm.image.h; h++) {
+        uint8_t next_col;
+        current_val = 32767;
+        if(current_col > 0) {
+            next_col = current_col-1;
+            current_val = hm.path_map[h][current_col-1];
+        }
+        if(hm.path_map[h][current_col] < current_val) {
+            next_col = current_col;
+            current_val = hm.path_map[h][current_col];
+        }
+        if(current_col < hm.image.w-1 && hm.path_map[h][current_col+1] < current_val) {
+            next_col = current_col+1;
+            current_val = hm.path_map[h][current_col+1];
+        }
+        result.path.push_back(next_col);
+        current_col = next_col;
+    }
+    return result;
+}
+
 struct seam_cut_return_t {
     image_t img;
     heatmap_t hm;
     int16_t path_energy;
-    bool found;
 };
 
 seam_cut_return_t perform_seam_cut(image_t img, heatmap_t hm) {
-    if(!hm.paths.size() || !img.w) return {img, hm, 0, false};
-    path_t best_path;
-    bool first = true;
-    for(auto p: hm.paths) {
-        if(first) {
-            best_path = p;
-            first = false;
-        } else if(p < best_path) best_path = p;
-    }
+    if(!img.w) return {img, hm, 0};
+    path_t best_path = find_path(hm);
     // TODO add 2d array of booleans that toggle a pixel as having been cropped or not
     // that way we don't have to actually remove them from the image
     for(uint8_t row = 0; row < img.h; row++) {
@@ -174,7 +143,7 @@ seam_cut_return_t perform_seam_cut(image_t img, heatmap_t hm) {
     img.w--;
     // TODO perform optimal regeneration of heatmap
     // based on width of chosen path and width of current paths
-    return {img, hm, best_path.total_energy, true};
+    return {img, hm, best_path.total_energy};
 }
 
 int main()
