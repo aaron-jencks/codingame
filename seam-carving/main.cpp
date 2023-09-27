@@ -190,6 +190,7 @@ int main()
     while(img_state.w > v) {
         seam_cut_return_t cut = perform_seam_cut(img_state, hm);
         cout << cut.path_energy << endl;
+        if(cut.img.w == img_state.w) break;
         img_state = cut.img;
         hm = generate_heatmap(img_state);
     }
