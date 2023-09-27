@@ -37,39 +37,52 @@ struct path_return_t {
 };
 
 path_return_t find_path_rec(path_t path_in, int16_t** energy_map, uint8_t col, uint8_t row, uint8_t h, uint8_t w) {
-    if(row == h) {
-        // base case
-        path_in.path.push_back(col);
-        return {path_in, true};
-    }
-
     path_t base_path = path_in;
     base_path.path.push_back(col);
+    int16_t prev_energy = energy_map[row-1][col];
+    base_path.total_energy += prev_energy;
 
-    path_return_t cpath;
-    bool cpop = false;
+    if(row == h) {
+        // base case
+        return {base_path, true};
+    }
+
+    path_return_t cpath{path_t{}, false};
 
     // TODO memoization of later paths
-    int16_t prev_energy = energy_map[row-1][col];
     if(col > 0) {
         int16_t lenergy = energy_map[row][col-1];
         if(abs(lenergy-prev_energy) <= 1) {
             cpath = find_path_rec(base_path, energy_map, col-1, row+1, h, w);
-            cpop = cpath.found;
         }
     }
     int16_t cenergy = energy_map[row][col];
     if(abs(cenergy-prev_energy) <= 1) {
         path_return_t npath = find_path_rec(base_path, energy_map, col-1, row+1, h, w);
-        if(cpop) {
+        if(cpath.found) {
+            if(npath.found && npath.best_path < cpath.best_path) {
+            }
+        } else {
+            cpath = npath;
+        }
+    }
+    int16_t renergy = energy_map[row][col+1];
+    if(abs(renergy-prev_energy) <= 1) {
+        path_return_t npath = find_path_rec(base_path, energy_map, col+1, row+1, h, w);
+        if(cpath.found) {
             if(npath.found && npath.best_path < cpath.best_path) {
                 cpath = npath;
             }
         } else {
             cpath = npath;
-            cpop = npath.found;
         }
     }
+
+    return cpath;
+}
+
+path_return_t find_path(int16_t** energy_map, uint8_t col, uint8_t h, uint8_t w) {
+    return find_path_rec(path_t{vector<uint8_t>(), 0}, energy_map, col, 1, h, w);
 }
 
 struct heatmap_t {
