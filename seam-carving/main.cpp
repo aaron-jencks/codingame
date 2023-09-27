@@ -100,8 +100,8 @@ heatmap_t generate_heatmap(image_t image) {
         }
     }
     for(uint8_t c = 0; c < image.w; c++) {
-        path_t pp = find_path(hm.energies, c, image.h, image.w);
-        if(pp.valid(image.h)) hm.paths.push_back(pp);
+        path_return_t pp = find_path(hm.energies, c, image.h, image.w);
+        if(pp.found && pp.best_path.valid(image.h)) hm.paths.push_back(pp.best_path);
     }
     return hm;
 }
