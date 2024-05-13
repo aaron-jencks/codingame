@@ -252,8 +252,8 @@ func TestMapCloning(t *testing.T) {
 				ParseRoom("3"),
 			},
 		},
-		Rocks: map[int]ObjectCoord{
-			0: ParseObjectCoord("5 5 TOP"),
+		Rocks: []ObjectCoord{
+			ParseObjectCoord("5 5 TOP"),
 		},
 	}
 
@@ -285,16 +285,16 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "horizontal/vertical",
 			r:    ParseRoom("2"),
 			out: [][]int{
-				{EXIT_INVALID, EXIT_BOTTOM},
-				{EXIT_INVALID, EXIT_RIGHT},
-				{EXIT_INVALID, EXIT_LEFT},
+				{EXIT_BOTTOM},
+				{EXIT_RIGHT},
+				{EXIT_LEFT},
 			},
 		},
 		{
 			name: "horizontal locked",
 			r:    ParseRoom("-2"),
 			out: [][]int{
-				{EXIT_INVALID},
+				nil,
 				{EXIT_RIGHT},
 				{EXIT_LEFT},
 			},
@@ -304,7 +304,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-3"),
 			out: [][]int{
 				{EXIT_BOTTOM},
-				{EXIT_INVALID}, {EXIT_INVALID},
+				nil, nil,
 			},
 		},
 		{
@@ -312,8 +312,8 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("4"),
 			out: [][]int{
 				{EXIT_RIGHT, EXIT_LEFT},
-				{EXIT_INVALID, EXIT_BOTTOM},
-				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_BOTTOM},
+				{EXIT_BOTTOM},
 			},
 		},
 		{
@@ -321,7 +321,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-4"),
 			out: [][]int{
 				{EXIT_LEFT},
-				{EXIT_INVALID},
+				nil,
 				{EXIT_BOTTOM},
 			},
 		},
@@ -331,23 +331,23 @@ func TestTheoreticalExits(t *testing.T) {
 			out: [][]int{
 				{EXIT_RIGHT},
 				{EXIT_BOTTOM},
-				{EXIT_INVALID},
+				nil,
 			},
 		},
 		{
 			name: "T",
 			r:    ParseRoom("6"),
 			out: [][]int{
-				{EXIT_INVALID, EXIT_BOTTOM},
-				{EXIT_INVALID, EXIT_RIGHT, EXIT_BOTTOM},
-				{EXIT_INVALID, EXIT_LEFT, EXIT_BOTTOM},
+				{EXIT_BOTTOM},
+				{EXIT_RIGHT, EXIT_BOTTOM},
+				{EXIT_LEFT, EXIT_BOTTOM},
 			},
 		},
 		{
 			name: "top T locked",
 			r:    ParseRoom("-6"),
 			out: [][]int{
-				{EXIT_INVALID},
+				nil,
 				{EXIT_RIGHT},
 				{EXIT_LEFT},
 			},
@@ -357,7 +357,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-7"),
 			out: [][]int{
 				{EXIT_BOTTOM},
-				{EXIT_INVALID},
+				nil,
 				{EXIT_BOTTOM},
 			},
 		},
@@ -365,7 +365,7 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "bottom T locked",
 			r:    ParseRoom("-8"),
 			out: [][]int{
-				{EXIT_INVALID},
+				nil,
 				{EXIT_BOTTOM},
 				{EXIT_BOTTOM},
 			},
@@ -376,16 +376,16 @@ func TestTheoreticalExits(t *testing.T) {
 			out: [][]int{
 				{EXIT_BOTTOM},
 				{EXIT_BOTTOM},
-				{EXIT_INVALID},
+				nil,
 			},
 		},
 		{
 			name: "tl/tr/rb/lb",
 			r:    ParseRoom("10"),
 			out: [][]int{
-				{EXIT_INVALID, EXIT_LEFT, EXIT_RIGHT},
-				{EXIT_INVALID, EXIT_BOTTOM},
-				{EXIT_INVALID, EXIT_BOTTOM},
+				{EXIT_LEFT, EXIT_RIGHT},
+				{EXIT_BOTTOM},
+				{EXIT_BOTTOM},
 			},
 		},
 		{
@@ -393,7 +393,7 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-10"),
 			out: [][]int{
 				{EXIT_LEFT},
-				{EXIT_INVALID}, {EXIT_INVALID},
+				nil, nil,
 			},
 		},
 		{
@@ -401,14 +401,14 @@ func TestTheoreticalExits(t *testing.T) {
 			r:    ParseRoom("-11"),
 			out: [][]int{
 				{EXIT_RIGHT},
-				{EXIT_INVALID}, {EXIT_INVALID},
+				nil, nil,
 			},
 		},
 		{
 			name: "rb locked",
 			r:    ParseRoom("-12"),
 			out: [][]int{
-				{EXIT_INVALID}, {EXIT_INVALID},
+				nil, nil,
 				{EXIT_BOTTOM},
 			},
 		},
@@ -416,9 +416,9 @@ func TestTheoreticalExits(t *testing.T) {
 			name: "lb locked",
 			r:    ParseRoom("-13"),
 			out: [][]int{
-				{EXIT_INVALID},
+				nil,
 				{EXIT_BOTTOM},
-				{EXIT_INVALID},
+				nil,
 			},
 		},
 	}
@@ -540,14 +540,13 @@ func TestPathFinding(t *testing.T) {
 
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestPathfinding(%d)", ti), func(tt *testing.T) {
-			tc.m.IndyPosition = tc.start
-			result := FindMapPath(tc.m)
+			result := FindMapPath(tc.m, tc.start)
 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
 
 			for pi, path := range tc.out {
 				found := false
 				for _, tpath := range result {
-					if reflect.DeepEqual(path, tpath.Indy) {
+					if reflect.DeepEqual(path, tpath) {
 						found = true
 					}
 				}
@@ -666,14 +665,13 @@ func TestPathValidating(t *testing.T) {
 
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestPathfinding(%d)", ti), func(tt *testing.T) {
-			tc.m.IndyPosition = tc.start
-			result := FindValidMapPath(tc.m)
+			result := FindValidMapPath(tc.m, tc.start)
 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
 
 			for pi, path := range tc.out {
 				found := false
 				for _, tpath := range result {
-					if reflect.DeepEqual(path, tpath.Indy) {
+					if reflect.DeepEqual(path, tpath) {
 						found = true
 					}
 				}
@@ -726,531 +724,9 @@ func TestNextMove(t *testing.T) {
 	for ti, tc := range tcs {
 		t.Run(fmt.Sprintf("TestNextMove(%d)", ti), func(tt *testing.T) {
 			for mi, mv := range tc.out {
-				tc.m.IndyPosition = tc.start
-				result := FindNextMove(tc.m)
+				result := FindNextMove(tc.m, tc.start)
 				assert.Equal(t, mv, result, "Function should generate a valid rotated path, failed at move %d", mi)
 			}
 		})
 	}
 }
-
-func TestRockPermutations(t *testing.T) {
-	tcs := []struct {
-		m   Map
-		st  PathState
-		out []map[int]ObjectCoord
-	}{
-		{
-			m: ParseMap(6, 6, []string{
-				"0 -3 -3 -5 1 -1",
-				"-13 11 4 0 -3 1",
-				"11 6 1 0 10 1",
-				"0 0 10 3 3 1",
-				"0 0 0 0 0 3",
-				"0 0 0 0 0 -3",
-				"5",
-			}),
-			st: PathState{
-				IndyPosition: ParseObjectCoord("1 0 TOP"),
-				Rocks: map[int]ObjectCoord{
-					0: ParseObjectCoord("2 0 TOP"),
-					1: ParseObjectCoord("0 1 LEFT"),
-					2: ParseObjectCoord("4 2 TOP"),
-					3: ParseObjectCoord("5 1 TOP"),
-				},
-			},
-			out: []map[int]ObjectCoord{
-				{
-					0: ParseObjectCoord("2 1 TOP"),
-					1: ParseObjectCoord("0 2 TOP"),
-					2: ParseObjectCoord("3 2 RIGHT"),
-					3: ParseObjectCoord("5 2 TOP"),
-				},
-				{
-					0: ParseObjectCoord("2 1 TOP"),
-					1: ParseObjectCoord("0 2 TOP"),
-					3: ParseObjectCoord("5 2 TOP"),
-				},
-				{
-					// should eliminate the two collisions
-					// but leave an echo
-					0: ParseObjectCoord("2 1 TOP"),
-					1: ParseObjectCoord("0 2 TOP"),
-					3: ObjectCoord{
-						X:         5,
-						Y:         2,
-						Entrance:  INDY_TOP,
-						Temporary: true,
-					},
-				},
-			},
-		},
-	}
-
-	for ti, tc := range tcs {
-		t.Run(fmt.Sprintf("TestRockPermutations(%d)", ti), func(tt *testing.T) {
-			result := FindRockPermutations(tc.m, tc.st)
-
-			assert.Equal(tt, len(tc.out), len(result), "result and testcase should have same number of permutations")
-
-			for permi, perm := range tc.out {
-				found := false
-				for _, rperm := range result {
-					if reflect.DeepEqual(perm, rperm) {
-						found = true
-						break
-					}
-				}
-				if !found {
-					assert.True(tt, false, "Function should all valid permutations, permutation %d not found", permi)
-				}
-			}
-		})
-	}
-}
-
-// func TestPathNeighborsWRocks(t *testing.T) {
-// 	tcs := []struct {
-// 		m     Map
-// 		start ObjectCoord
-// 		rocks map[int]ObjectCoord
-// 		out   []PathNeighbor
-// 	}{
-// 		{
-// 			m: ParseMap(8, 10, []string{
-// 				"0 0 0 0 0 0 0 0 -3 0",
-// 				"0 7 -2 3 -2 3 -2 3 11 0",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 6 -2 2 2 2 2 2 2 -2",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 8 -2 2 2 2 2 2 2 -2",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 -3 0 0 0 0 0 0 0 0",
-// 				"1",
-// 			}),
-// 			start: ParseObjectCoord("8 0 TOP"),
-// 			rocks: map[int]ObjectCoord{
-// 				0: ParseObjectCoord("9 2 RIGHT"),
-// 			},
-// 			out: []PathNeighbor{
-// 				{
-// 					IndyPosition: ParseObjectCoord("8 1 TOP"),
-// 					Rocks: map[int]ObjectCoord{
-// 						0: ParseObjectCoord("8 2 RIGHT"),
-// 					},
-// 				},
-// 				{
-// 					IndyPosition: ParseObjectCoord("8 1 TOP"),
-// 					Rocks: map[int]ObjectCoord{
-// 						0: ObjectCoord{},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-// }
-
-func TestPathFindingWRocks(t *testing.T) {
-	tcs := []struct {
-		m       Map
-		start   ObjectCoord
-		rocks   map[int]ObjectCoord
-		out     [][]ObjectCoord
-		rockOut []map[int][]ObjectCoord
-	}{
-		{
-			m: ParseMap(8, 10, []string{
-				"0 0 0 0 0 0 0 0 -3 0",
-				"0 7 -2 3 -2 3 -2 3 11 0",
-				"0 -7 -2 2 2 2 2 2 2 -2",
-				"0 6 -2 2 2 2 2 2 2 -2",
-				"0 -7 -2 2 2 2 2 2 2 -2",
-				"0 8 -2 2 2 2 2 2 2 -2",
-				"0 -7 -2 2 2 2 2 2 2 -2",
-				"0 -3 0 0 0 0 0 0 0 0",
-				"1",
-			}),
-			start: ParseObjectCoord("8 0 TOP"),
-			out: [][]ObjectCoord{
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-				{
-					ParseObjectCoord("8 0 TOP"),
-					ParseObjectCoord("8 1 TOP"),
-					ParseObjectCoord("7 1 RIGHT"),
-					ParseObjectCoord("6 1 RIGHT"),
-					ParseObjectCoord("5 1 RIGHT"),
-					ParseObjectCoord("4 1 RIGHT"),
-					ParseObjectCoord("3 1 RIGHT"),
-					ParseObjectCoord("2 1 RIGHT"),
-					ParseObjectCoord("1 1 RIGHT"),
-					ParseObjectCoord("1 2 TOP"),
-					ParseObjectCoord("1 3 TOP"),
-					ParseObjectCoord("1 4 TOP"),
-					ParseObjectCoord("1 5 TOP"),
-					ParseObjectCoord("1 6 TOP"),
-					ParseObjectCoord("1 7 TOP"),
-				},
-			},
-			rocks: map[int]ObjectCoord{
-				0: ParseObjectCoord("9 2 RIGHT"),
-			},
-			rockOut: []map[int][]ObjectCoord{
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-						ParseObjectCoord("4 2 RIGHT"),
-						ParseObjectCoord("3 2 RIGHT"),
-						ParseObjectCoord("2 2 RIGHT"),
-						ParseObjectCoord("1 2 RIGHT"),
-						ParseObjectCoord("1 3 TOP"),
-						ParseObjectCoord("1 4 TOP"),
-						ParseObjectCoord("1 5 TOP"),
-						ParseObjectCoord("1 6 TOP"),
-						ParseObjectCoord("1 7 TOP"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-						ParseObjectCoord("4 2 RIGHT"),
-						ParseObjectCoord("3 2 RIGHT"),
-						ParseObjectCoord("2 2 RIGHT"),
-						ParseObjectCoord("1 2 RIGHT"),
-						ParseObjectCoord("1 3 TOP"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-						ParseObjectCoord("4 2 RIGHT"),
-						ParseObjectCoord("3 2 RIGHT"),
-						ParseObjectCoord("2 2 RIGHT"),
-						ParseObjectCoord("1 2 RIGHT"),
-						ParseObjectCoord("1 3 TOP"),
-						ParseObjectCoord("1 4 TOP"),
-						ParseObjectCoord("1 5 TOP"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-						ParseObjectCoord("4 2 RIGHT"),
-					},
-				},
-				{
-					0: {
-						ParseObjectCoord("9 2 RIGHT"),
-						ParseObjectCoord("8 2 RIGHT"),
-						ParseObjectCoord("7 2 RIGHT"),
-						ParseObjectCoord("6 2 RIGHT"),
-						ParseObjectCoord("5 2 RIGHT"),
-						ParseObjectCoord("4 2 RIGHT"),
-						ParseObjectCoord("3 2 RIGHT"),
-					},
-				},
-			},
-		},
-	}
-
-	for ti, tc := range tcs {
-		t.Run(fmt.Sprintf("TestPathfindingWRocks(%d)", ti), func(tt *testing.T) {
-			tc.m.IndyPosition = tc.start
-			tc.m.Rocks = tc.rocks
-
-			result := FindMapPath(tc.m)
-			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
-
-			for pi, path := range tc.out {
-				rdict := tc.rockOut[pi] // for checking rocks
-
-				found := false
-				for _, tpath := range result {
-					if reflect.DeepEqual(path, tpath.Indy) {
-						found = true
-
-						// check the rocks
-						for k, v := range rdict {
-							var ri int
-							var rrdict map[int]ObjectCoord
-							for ri, rrdict = range tpath.Rocks {
-								if rrdict == nil {
-									break
-								}
-
-								if ri >= len(v) {
-									found = false
-									break
-								}
-
-								if !reflect.DeepEqual(rrdict[k], v[ri]) {
-									found = false
-									break
-								}
-							}
-							if !found {
-								break
-							}
-						}
-
-						if found {
-							break
-						}
-					}
-				}
-				if !found {
-					assert.True(tt, false,
-						"all known paths should be found in the result, path %d was not found", pi)
-				}
-			}
-		})
-	}
-}
-
-// func TestPathValidatingWRocks(t *testing.T) {
-// 	tcs := []struct {
-// 		m     Map
-// 		start ObjectCoord
-// 		rocks map[int]ObjectCoord
-// 		out   [][]ObjectCoord
-// 	}{
-// 		{
-// 			m: ParseMap(8, 10, []string{
-// 				"0 0 0 0 0 0 0 0 -3 0",
-// 				"0 7 -2 3 -2 3 -2 3 11 0",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 6 -2 2 2 2 2 2 2 -2",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 8 -2 2 2 2 2 2 2 -2",
-// 				"0 -7 -2 2 2 2 2 2 2 -2",
-// 				"0 -3 0 0 0 0 0 0 0 0",
-// 				"1",
-// 			}),
-// 			start: ParseObjectCoord("8 0 TOP"),
-// 			out: [][]ObjectCoord{
-// 				{
-// 					ParseObjectCoord("8 0 TOP"),
-// 					ParseObjectCoord("8 1 TOP"),
-// 					ParseObjectCoord("7 1 RIGHT"),
-// 					ParseObjectCoord("6 1 RIGHT"),
-// 					ParseObjectCoord("5 1 RIGHT"),
-// 					ParseObjectCoord("4 1 RIGHT"),
-// 					ParseObjectCoord("3 1 RIGHT"),
-// 					ParseObjectCoord("2 1 RIGHT"),
-// 					ParseObjectCoord("1 1 RIGHT"),
-// 					ParseObjectCoord("1 2 TOP"),
-// 					ParseObjectCoord("1 3 TOP"),
-// 					ParseObjectCoord("1 4 TOP"),
-// 					ParseObjectCoord("1 5 TOP"),
-// 					ParseObjectCoord("1 6 TOP"),
-// 					ParseObjectCoord("1 7 TOP"),
-// 				},
-// 			},
-// 			rocks: map[int]ObjectCoord{
-// 				0: ParseObjectCoord("9 2 RIGHT"),
-// 			},
-// 		},
-// 	}
-
-// 	for ti, tc := range tcs {
-// 		t.Run(fmt.Sprintf("TestPathfindingWRocks(%d)", ti), func(tt *testing.T) {
-// 			tc.m.IndyPosition = tc.start
-// 			tc.m.Rocks = tc.rocks
-
-// 			result := FindValidMapPath(tc.m)
-// 			assert.Equal(tt, len(tc.out), len(result), "number of found paths should be equal, expected %d, found %d", len(tc.out), len(result))
-
-// 			for pi, path := range tc.out {
-// 				found := false
-// 				for _, tpath := range result {
-// 					if reflect.DeepEqual(path, tpath.Indy) {
-// 						found = true
-// 					}
-// 				}
-// 				if !found {
-// 					assert.True(tt, false, "all known paths should be found in the result, path %d was not found", pi)
-// 				}
-// 			}
-// 		})
-// 	}
-// }

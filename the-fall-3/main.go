@@ -93,95 +93,59 @@ func (r *Room) Right() {
 func (r Room) TheoreticalExits(in int) []int {
 	switch r.Rtype {
 	case ROOM_EMPTY:
-		return []int{EXIT_INVALID}
+		return nil
 	case ROOM_CROSS:
 		return []int{
 			EXIT_BOTTOM,
 		}
 	case ROOM_HORIZONTAL:
 		if !r.Rotatable && in == INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_RIGHT,
-					}
-				}
 				return []int{
 					EXIT_RIGHT,
 				}
 			case INDY_RIGHT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_LEFT,
-					}
-				}
 				return []int{
 					EXIT_LEFT,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			}
 		}
 	case ROOM_VERTICAL:
 		if !r.Rotatable && in != INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_RIGHT,
-					}
-				}
 				return []int{
 					EXIT_RIGHT,
 				}
 			case INDY_RIGHT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_LEFT,
-					}
-				}
 				return []int{
 					EXIT_LEFT,
 				}
 			case INDY_TOP:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_BOTTOM,
-					}
+				return []int{
+					EXIT_BOTTOM,
 				}
-				return []int{EXIT_BOTTOM}
 			}
 		}
 	case ROOM_TLRB:
 		if !r.Rotatable && in == INDY_LEFT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_RIGHT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_BOTTOM,
-					}
-				}
 				return []int{
 					EXIT_BOTTOM,
 				}
@@ -200,22 +164,15 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	case ROOM_TRLB:
 		if !r.Rotatable && in == INDY_RIGHT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
-				if r.Rotatable {
-					return []int{
-						EXIT_INVALID,
-						EXIT_BOTTOM,
-					}
-				}
 				return []int{
 					EXIT_BOTTOM,
 				}
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
@@ -233,13 +190,12 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	case ROOM_TOP_T:
 		if !r.Rotatable && in == INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
 				if r.Rotatable {
 					return []int{
-						EXIT_INVALID,
 						EXIT_RIGHT,
 						EXIT_BOTTOM,
 					}
@@ -251,7 +207,6 @@ func (r Room) TheoreticalExits(in int) []int {
 			case INDY_RIGHT:
 				if r.Rotatable {
 					return []int{
-						EXIT_INVALID,
 						EXIT_LEFT,
 						EXIT_BOTTOM,
 					}
@@ -262,14 +217,13 @@ func (r Room) TheoreticalExits(in int) []int {
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			}
 		}
 	case ROOM_RIGHT_T:
 		if !r.Rotatable && in == INDY_LEFT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			if !r.Rotatable {
 				return []int{
@@ -280,26 +234,23 @@ func (r Room) TheoreticalExits(in int) []int {
 			switch in {
 			case INDY_LEFT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_RIGHT,
 					EXIT_BOTTOM,
 				}
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			}
 		}
 	case ROOM_BOTTOM_T:
 		if !r.Rotatable && in == INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			if !r.Rotatable {
 				return []int{
@@ -310,26 +261,23 @@ func (r Room) TheoreticalExits(in int) []int {
 			switch in {
 			case INDY_LEFT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_RIGHT,
 					EXIT_BOTTOM,
 				}
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			}
 		}
 	case ROOM_LEFT_T:
 		if !r.Rotatable && in == INDY_RIGHT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			if !r.Rotatable {
 				return []int{
@@ -340,33 +288,29 @@ func (r Room) TheoreticalExits(in int) []int {
 			switch in {
 			case INDY_LEFT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_RIGHT,
 					EXIT_BOTTOM,
 				}
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			}
 		}
 	case ROOM_TL:
 		if !r.Rotatable && in != INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
 				fallthrough
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
@@ -377,7 +321,6 @@ func (r Room) TheoreticalExits(in int) []int {
 				}
 
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_RIGHT,
 				}
@@ -385,14 +328,13 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	case ROOM_TR:
 		if !r.Rotatable && in != INDY_TOP {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
 				fallthrough
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
@@ -403,7 +345,6 @@ func (r Room) TheoreticalExits(in int) []int {
 				}
 
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_RIGHT,
 				}
@@ -411,25 +352,17 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	case ROOM_RB:
 		if !r.Rotatable && in != INDY_RIGHT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
-				return []int{
-					EXIT_INVALID,
-					EXIT_BOTTOM,
-				}
+				fallthrough
 			case INDY_RIGHT:
-				if !r.Rotatable {
-					return []int{EXIT_BOTTOM}
-				}
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_RIGHT,
 				}
@@ -437,22 +370,17 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	case ROOM_LB:
 		if !r.Rotatable && in != INDY_LEFT {
-			return []int{EXIT_INVALID}
+			return nil
 		} else {
 			switch in {
 			case INDY_LEFT:
-				if !r.Rotatable {
-					return []int{EXIT_BOTTOM}
-				}
 				fallthrough
 			case INDY_RIGHT:
 				return []int{
-					EXIT_INVALID,
 					EXIT_BOTTOM,
 				}
 			case INDY_TOP:
 				return []int{
-					EXIT_INVALID,
 					EXIT_LEFT,
 					EXIT_RIGHT,
 				}
@@ -460,7 +388,7 @@ func (r Room) TheoreticalExits(in int) []int {
 		}
 	}
 
-	return []int{EXIT_INVALID}
+	return nil
 }
 
 func (r Room) Exit(in int) int {
@@ -912,10 +840,9 @@ func ParseRoom(line string) Room {
 }
 
 type ObjectCoord struct {
-	X         int
-	Y         int
-	Entrance  int
-	Temporary bool
+	X        int
+	Y        int
+	Entrance int
 }
 
 type Map struct {
@@ -924,7 +851,7 @@ type Map struct {
 	Rooms        [][]Room
 	Exit         int
 	IndyPosition ObjectCoord
-	Rocks        map[int]ObjectCoord
+	Rocks        []ObjectCoord
 }
 
 func (m Map) Clone() Map {
@@ -934,7 +861,7 @@ func (m Map) Clone() Map {
 		Exit:         m.Exit,
 		IndyPosition: m.IndyPosition,
 		Rooms:        make([][]Room, m.Height),
-		Rocks:        make(map[int]ObjectCoord),
+		Rocks:        make([]ObjectCoord, len(m.Rocks)),
 	}
 
 	for ri := range m.Rooms {
@@ -942,9 +869,7 @@ func (m Map) Clone() Map {
 		copy(result.Rooms[ri], m.Rooms[ri])
 	}
 
-	for k, v := range m.Rocks {
-		result.Rocks[k] = v
-	}
+	copy(result.Rocks, m.Rocks)
 
 	return result
 }
@@ -992,127 +917,13 @@ type SolutionMove struct {
 
 type PathState struct {
 	IndyPosition ObjectCoord
-	Rocks        map[int]ObjectCoord
-	IndySolution []ObjectCoord
-	RockSolution []map[int]ObjectCoord
+	Solution     []ObjectCoord
 }
 
-type PathNeighbor struct {
-	IndyPosition ObjectCoord
-	Rocks        map[int]ObjectCoord
-}
-
-func FindRockPermutations(m Map, st PathState) []map[int]ObjectCoord {
-	var currentPerms []map[int]ObjectCoord
-
-	for ri, rock := range st.Rocks {
-		if rock.Temporary {
-			// this was an echo of a collision,
-			// but Indy will still die if he goes here
-			continue
-		}
-
-		exits := m.Rooms[rock.Y][rock.X].TheoreticalExits(rock.Entrance)
-
-		prevPerms := make([]map[int]ObjectCoord, len(currentPerms))
-		copy(prevPerms, currentPerms)
-		currentPerms = nil
-
-		for _, exit := range exits {
-			if exit == EXIT_INVALID {
-				if len(prevPerms) > 0 {
-					for _, perm := range prevPerms {
-						nperm := map[int]ObjectCoord{}
-
-						for k, v := range perm {
-							if k == ri {
-								continue
-							}
-
-							nperm[k] = v
-						}
-
-						currentPerms = append(currentPerms, nperm)
-					}
-				} else {
-					currentPerms = append(currentPerms, nil)
-				}
-				continue
-			}
-
-			nm := ObjectCoord{
-				X:        rock.X,
-				Y:        rock.Y,
-				Entrance: FindEntranceFromExit(exit),
-			}
-
-			switch exit {
-			case EXIT_BOTTOM:
-				if rock.Y+1 < m.Height {
-					nm.Y = rock.Y + 1
-				} else {
-					continue
-				}
-			case EXIT_LEFT:
-				if rock.X-1 >= 0 {
-					nm.X = rock.X - 1
-				} else {
-					continue
-				}
-			case EXIT_RIGHT:
-				if rock.X+1 < m.Width {
-					nm.X = rock.X + 1
-				} else {
-					continue
-				}
-			}
-
-			if len(prevPerms) > 0 {
-				for _, perm := range prevPerms {
-					nperm := map[int]ObjectCoord{}
-
-					found := false
-					for k, v := range perm {
-						if nm.X == v.X && nm.Y == v.Y {
-							// two rocks collided and destroyed each other
-							// skip copying this over,
-							// the rock was destroyed
-							found = true
-							continue
-						}
-
-						nperm[k] = v
-					}
-
-					if found {
-						// create a collision echo
-						// in case indy tries to go here
-						nm.Temporary = true
-					}
-
-					nperm[ri] = nm
-
-					currentPerms = append(currentPerms, nperm)
-				}
-			} else {
-				currentPerms = append(currentPerms, map[int]ObjectCoord{
-					ri: nm,
-				})
-			}
-		}
-	}
-
-	return currentPerms
-}
-
-func FindIndyExits(m Map, st PathState) []ObjectCoord {
-	var indyExits []ObjectCoord
+func FindPathNeighbors(m Map, st PathState) []ObjectCoord {
+	var result []ObjectCoord
 
 	for _, exit := range m.Rooms[st.IndyPosition.Y][st.IndyPosition.X].TheoreticalExits(st.IndyPosition.Entrance) {
-		if exit == EXIT_INVALID {
-			continue
-		}
-
 		nm := ObjectCoord{
 			X:        st.IndyPosition.X,
 			Y:        st.IndyPosition.Y,
@@ -1138,69 +949,18 @@ func FindIndyExits(m Map, st PathState) []ObjectCoord {
 				continue
 			}
 		}
-		indyExits = append(indyExits, nm)
-	}
-
-	return indyExits
-}
-
-func HasIndyRockCollision(indyLoc ObjectCoord, rockLoc map[int]ObjectCoord) bool {
-	for _, rock := range rockLoc {
-		if indyLoc.X == rock.X && indyLoc.Y == rock.Y {
-			return true
-		}
-	}
-	return false
-}
-
-func FindPathNeighbors(m Map, st PathState) []PathNeighbor {
-	var result []PathNeighbor
-
-	rockPermutations := FindRockPermutations(m, st)
-	indyExits := FindIndyExits(m, st)
-
-	if len(rockPermutations) > 0 {
-		for _, perm := range rockPermutations {
-			if perm != nil {
-				for _, exit := range indyExits {
-					if !HasIndyRockCollision(exit, perm) {
-						result = append(result, PathNeighbor{
-							IndyPosition: exit,
-							Rocks:        perm,
-						})
-					}
-				}
-			} else {
-				for _, exit := range indyExits {
-					result = append(result, PathNeighbor{
-						IndyPosition: exit,
-					})
-				}
-			}
-		}
-	} else {
-		for _, exit := range indyExits {
-			result = append(result, PathNeighbor{
-				IndyPosition: exit,
-			})
-		}
+		result = append(result, nm)
 	}
 
 	return result
 }
 
-type MapPath struct {
-	Indy  []ObjectCoord
-	Rocks []map[int]ObjectCoord
-}
-
-func FindMapPath(m Map) []MapPath {
-	var result []MapPath
+func FindMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
+	var result [][]ObjectCoord
 
 	stack := []PathState{
 		{
-			IndyPosition: m.IndyPosition,
-			Rocks:        m.Rocks,
+			IndyPosition: start,
 		},
 	}
 
@@ -1208,26 +968,15 @@ func FindMapPath(m Map) []MapPath {
 		st := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]
 
-		neighs := FindPathNeighbors(m, st)
-		for _, mv := range neighs {
+		for _, mv := range FindPathNeighbors(m, st) {
 			ns := PathState{
-				IndyPosition: mv.IndyPosition,
-				Rocks:        mv.Rocks,
-				IndySolution: append(st.IndySolution, st.IndyPosition),
-				RockSolution: append(st.RockSolution, st.Rocks),
+				IndyPosition: mv,
+				Solution:     append(st.Solution, st.IndyPosition),
 			}
 
-			if HasIndyRockCollision(mv.IndyPosition, mv.Rocks) {
-				// Indy collided with a rock
-				continue
-			}
-
-			if mv.IndyPosition.Y == m.Height-1 && mv.IndyPosition.X == m.Exit {
+			if mv.Y == m.Height-1 && mv.X == m.Exit {
 				// found a solution
-				result = append(result, MapPath{
-					Indy:  append(ns.IndySolution, mv.IndyPosition),
-					Rocks: append(ns.RockSolution, mv.Rocks),
-				})
+				result = append(result, append(ns.Solution, mv))
 			} else {
 				stack = append(stack, ns)
 			}
@@ -1237,72 +986,19 @@ func FindMapPath(m Map) []MapPath {
 	return result
 }
 
-func FindValidMapPath(m Map) []MapPath {
-	var result []MapPath
+func FindValidMapPath(m Map, start ObjectCoord) [][]ObjectCoord {
+	var result [][]ObjectCoord
 
-	for _, path := range FindMapPath(m) {
+	for _, path := range FindMapPath(m, start) {
 		budget := 1
 		valid := true
 
-		// we can make at most len(path.Indy) rotations,
-		// so we only need to loop that many times
-		for tick := 0; tick < len(path.Indy); tick++ {
-			rocks := make([][]bool, m.Height)
-			for ri := range rocks {
-				rocks[ri] = make([]bool, m.Width)
-			}
-
-			// Move the rocks
-			if tick < len(path.Rocks) {
-				for ri, rock := range path.Rocks[tick] {
-					next := INDY_INVALID
-					if tick < len(path.Rocks)-1 {
-						if nrock, ok := path.Rocks[tick+1][ri]; ok {
-							next = nrock.Entrance
-						}
-					}
-
-					rr := m.Rooms[rock.Y][rock.X].Clone()
-
-					rexit := FindEntranceFromExit(rr.Exit(rock.Entrance))
-					if rexit != next {
-						// we need to rotate
-
-						// if we can't rotate, then this path is invalid
-						if !rr.Rotatable {
-							valid = false
-							break
-						}
-
-						// cost 1
-						rr.Right()
-						rexit = FindEntranceFromExit(rr.Exit(rock.Entrance))
-						budget--
-						if rexit != next {
-							// cost 1
-							rr.Left()
-							rr.Left()
-							rexit = FindEntranceFromExit(rr.Exit(rock.Entrance))
-							if rexit != next {
-								// cost 2
-								budget--
-							}
-						}
-					}
-
-					if budget < 0 {
-						valid = false
-						break
-					}
-				}
-			}
-
-			// Move Indy
-			current := path.Indy[tick]
+		for pindex := 0; pindex < len(path); pindex++ {
+			current := path[pindex]
 
 			next := INDY_TOP
-			if tick < len(path.Indy)-1 {
-				next = path.Indy[tick+1].Entrance
+			if pindex < len(path)-1 {
+				next = path[pindex+1].Entrance
 			}
 
 			pr := m.Rooms[current.Y][current.X].Clone()
@@ -1322,7 +1018,7 @@ func FindValidMapPath(m Map) []MapPath {
 				// cost 1
 				pr.Right()
 				rexit = FindEntranceFromExit(pr.Exit(current.Entrance))
-				budget--
+				// budget--
 				if rexit != next {
 					// cost 1
 					pr.Left()
@@ -1333,6 +1029,8 @@ func FindValidMapPath(m Map) []MapPath {
 						budget--
 					}
 				}
+			} else {
+				budget++
 			}
 
 			// Indy would be here before we can rotate all of the way
@@ -1340,13 +1038,6 @@ func FindValidMapPath(m Map) []MapPath {
 				valid = false
 				break
 			}
-
-			if current.X == m.Exit && current.Y == m.Height-1 {
-				// we reached the end of Indy's path
-				break
-			}
-
-			budget++
 		}
 
 		if valid {
@@ -1357,16 +1048,16 @@ func FindValidMapPath(m Map) []MapPath {
 	return result
 }
 
-func FindNextMove(m Map) string {
-	paths := FindValidMapPath(m)
+func FindNextMove(m Map, start ObjectCoord) string {
+	paths := FindValidMapPath(m, start)
 	if len(paths) > 0 {
 		path := paths[0]
-		for pindex := 0; pindex < len(path.Indy); pindex++ {
-			current := path.Indy[pindex]
+		for pindex := 0; pindex < len(path); pindex++ {
+			current := path[pindex]
 
 			next := INDY_TOP
-			if pindex < len(path.Indy)-1 {
-				next = path.Indy[pindex+1].Entrance
+			if pindex < len(path)-1 {
+				next = path[pindex+1].Entrance
 			}
 
 			pr := m.Rooms[current.Y][current.X].Clone()
@@ -1430,19 +1121,16 @@ func main() {
 		scanner.Scan()
 		fmt.Sscan(scanner.Text(), &R)
 
-		initial_map.Rocks = make(map[int]ObjectCoord)
+		initial_map.Rocks = make([]ObjectCoord, R)
 
-		fmt.Fprintln(os.Stderr, "Rocks:")
 		for i := 0; i < R; i++ {
 			scanner.Scan()
-			rtext := scanner.Text()
-			fmt.Fprintln(os.Stderr, rtext)
-			initial_map.Rocks[i] = ParseObjectCoord(rtext)
+			initial_map.Rocks[i] = ParseObjectCoord(scanner.Text())
 		}
 
 		// fmt.Fprintln(os.Stderr, "Debug messages...")
 
 		// One line containing on of three commands: 'X Y LEFT', 'X Y RIGHT' or 'WAIT'
-		fmt.Println(FindNextMove(initial_map))
+		fmt.Println(FindNextMove(initial_map, initial_map.IndyPosition))
 	}
 }
